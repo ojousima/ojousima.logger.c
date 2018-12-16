@@ -6,7 +6,7 @@ SDK_ROOT := ../../../../nRF5_SDK_15.2.0_9412b96
 PROJ_DIR := ../../..
 
 $(OUTPUT_DIRECTORY)/nrf52832_xxaa.out: \
-  LINKER_SCRIPT  := ruuvi.firmware.c.ld
+  LINKER_SCRIPT  := ojousima.logger.c.ld
 
 # Source files common to all targets
 SRC_FILES += \

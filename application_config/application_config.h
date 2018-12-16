@@ -124,7 +124,7 @@
 /**
  * NFC configuration
  */
-// Longest text in a text field, i.e. "FW: ruuvi.firmware.c 3.10.0
+// Longest text in a text field, i.e. "FW: ojousima.logger.c 3.10.0
 #define APPLICATION_COMMUNICATION_NFC_TEXT_BUFFER_SIZE (32)
 // Longest binary message
 #define APPLICATION_COMMUNICATION_NFC_DATA_BUFFER_SIZE APPLICATION_COMMUNICATION_NFC_TEXT_BUFFER_SIZE

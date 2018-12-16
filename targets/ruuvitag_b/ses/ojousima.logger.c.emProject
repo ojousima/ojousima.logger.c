@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
-<solution Name="ruuvi.firmware.c" target="8" version="2">
-  <project Name="ruuvi.firmware.c">
+<solution Name="ojousima.logger.c" target="8" version="2">
+  <project Name="ojousima.logger.c">
     <configuration
       Name="Common"
       arm_architecture="v7EM"
