@@ -1,6 +1,6 @@
 [submodule "ruuvi.drivers.c"]
 	path = ruuvi.drivers.c
-	url = https://github.com/ruuvi/ruuvi.drivers.c.git
+	url = https://github.com/ojousima/ruuvi.drivers.c.git
 [submodule "ruuvi.boards.c"]
 	path = ruuvi.boards.c
 	url = https://github.com/ruuvi/ruuvi.boards.c.git
