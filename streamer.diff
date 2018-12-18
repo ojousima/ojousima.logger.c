@@ -1,0 +1,41 @@
+diff --git a/interfaces/acceleration/ruuvi_interface_lis2dh12.c b/interfaces/acceleration/ruuvi_interface_lis2dh12.c
+index 1913d9c..083fcc9 100644
+--- a/interfaces/acceleration/ruuvi_interface_lis2dh12.c
++++ b/interfaces/acceleration/ruuvi_interface_lis2dh12.c
+@@ -235,7 +235,7 @@ ruuvi_driver_status_t ruuvi_interface_lis2dh12_samplerate_set(uint8_t* samplerat
+ 
+   if(RUUVI_DRIVER_SENSOR_CFG_NO_CHANGE == *samplerate)   {}
+   else if(RUUVI_DRIVER_SENSOR_CFG_MIN == *samplerate)    { dev.samplerate = LIS2DH12_ODR_1Hz;   }
+-  else if(RUUVI_DRIVER_SENSOR_CFG_MAX == *samplerate)    { dev.samplerate = LIS2DH12_ODR_200Hz; }
++  else if(RUUVI_DRIVER_SENSOR_CFG_MAX == *samplerate)    { dev.samplerate = LIS2DH12_ODR_400Hz; }
+   else if(RUUVI_DRIVER_SENSOR_CFG_DEFAULT == *samplerate){ dev.samplerate = LIS2DH12_ODR_1Hz;   }
+   else if(1   == *samplerate)                            { dev.samplerate = LIS2DH12_ODR_1Hz;   }
+   else if(10  >= *samplerate)                            { dev.samplerate = LIS2DH12_ODR_10Hz;  }
+@@ -288,6 +288,10 @@ ruuvi_driver_status_t ruuvi_interface_lis2dh12_samplerate_get(uint8_t* samplerat
+       *samplerate = 200;
+       break;
+ 
++    case LIS2DH12_ODR_400Hz:
++      *samplerate = RUUVI_DRIVER_SENSOR_CFG_MAX;
++      break;
++
+     default:
+       *samplerate = RUUVI_DRIVER_SENSOR_ERR_NOT_SUPPORTED;
+       err_code |=  RUUVI_DRIVER_ERROR_INTERNAL;
+diff --git a/nrf5_sdk15_platform/communication/ruuvi_platform_communication_radio.c b/nrf5_sdk15_platform/communication/ruuvi_platform_communication_radio.c
+index 31a1351..6237630 100644
+--- a/nrf5_sdk15_platform/communication/ruuvi_platform_communication_radio.c
++++ b/nrf5_sdk15_platform/communication/ruuvi_platform_communication_radio.c
+@@ -71,9 +71,10 @@ ruuvi_driver_status_t ruuvi_interface_communication_radio_init  (const ruuvi_int
+   RUUVI_DRIVER_ERROR_CHECK(err_code, NRF_SUCCESS);
+ 
+   // Initialize radio interrupts
+-  err_code |= ble_radio_notification_init(NRF5_SDK15_RADIO_IRQ_PRIORITY,
++  /*err_code |= ble_radio_notification_init(NRF5_SDK15_RADIO_IRQ_PRIORITY,
+                                           NRF_RADIO_NOTIFICATION_DISTANCE_800US,
+-                                          on_radio_evt);
++                                          on_radio_evt);*/
++ 
+ 
+   return ruuvi_platform_to_ruuvi_error(&err_code);
+ }

@@ -9,7 +9,7 @@
 #define APPLICATION_CONFIG_H
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
-#define APPLICATION_FW_VERSION "RuuviFW 3.17.0"
+#define APPLICATION_FW_VERSION "Streamer 1.0.0"
 
 // Pick a power of 2 for nRF5 backend. 128 is recommended.
 #define APPLICATION_LOG_BUFFER_SIZE              256
@@ -62,9 +62,9 @@
 /**
  * Accelerometer configuration
  **/
- #ifndef APPLICATION_ACCELERATION_CONFIGURED
+#ifndef APPLICATION_ACCELERATION_CONFIGURED
   // 1, 10, 25, 50, 100, 200 for LIS2DH12
-  #define APPLICATION_ACCELEROMETER_SAMPLERATE 10
+  #define APPLICATION_ACCELEROMETER_SAMPLERATE RUUVI_DRIVER_SENSOR_CFG_MAX
 
   // 8, 10, 12 for LIS2DH12
   #define APPLICATION_ACCELEROMETER_RESOLUTION 10
@@ -73,7 +73,7 @@
   #define APPLICATION_ACCELEROMETER_SCALE   RUUVI_DRIVER_SENSOR_CFG_MIN
 
   // LAST or HIGH_PASS
-  #define APPLICATION_ACCELEROMETER_DSPFUNC RUUVI_DRIVER_SENSOR_DSP_LAST
+  #define APPLICATION_ACCELEROMETER_DSPFUNC RUUVI_DRIVER_SENSOR_DSP_HIGH_PASS
   #define APPLICATION_ACCELEROMETER_DSPPARAM 1
 
   // SLEEP or CONTINUOUS
@@ -104,7 +104,7 @@
 // Avoid "even" values such as 100 or 1000 to eventually drift apart from the devices transmitting at same interval
 #ifndef APPLICATION_ADVERTISING_CONFIGURED
   #define APPLICATION_ADVERTISING_INTERVAL              1010
-  #define APPLICATION_CONNECTION_ADVERTISEMENT_INTERVAL APPLICATION_ADVERTISING_INTERVAL
+  #define APPLICATION_CONNECTION_ADVERTISEMENT_INTERVAL 100
   #define APPLICATION_ADVERTISING_POWER                 RUUVI_BOARD_TX_POWER_MAX
   #define APPLICATION_DATA_FORMAT                       5
 #endif
@@ -117,8 +117,8 @@
 // Interval Max * (slave latency + 1) <= 2 seconds
 // Interval MAX + (slave latency +1) * 3 < connSupervisionTimeout
 #define APPLICATION_GATT_CONN_INTERVAL_MIN_MS      15
-#define APPLICATION_GATT_CONN_INTERVAL_MAX_MS      45
-#define APPLICATION_GATT_CONN_SLAVE_SKIP_INTERVALS 30   // Slave latency. How many intervals can be skipped. 31 * 45 < 2000
+#define APPLICATION_GATT_CONN_INTERVAL_MAX_MS      15
+#define APPLICATION_GATT_CONN_SLAVE_SKIP_INTERVALS 31   // Slave latency. How many intervals can be skipped. 31 * 45 < 2000
 #define APPLICATION_GATT_CONN_TIMEOUT_MS           5600 // 31 * 45 * 3 < 5600
 
 /**
@@ -172,6 +172,7 @@
 #define APPLICATION_LOG_BACKEND_RTT_ENABLED         1
 //#define APPLICATION_LOG_BACKEND_UART_ENABLED        0 // UART not implemented
 
-#define  APPLICATION_FLASH_DATA_PAGES_NUMBER        20
+// 64 * 1024 words (4096 bytyes) = 262144 bytes = 256 kB.
+#define  APPLICATION_FLASH_DATA_PAGES_NUMBER        64
 
 #endif

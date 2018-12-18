@@ -91,7 +91,7 @@ int main(void)
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Initialize ADC
-  status |= task_adc_init();
+  // status |= task_adc_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Initialize button with on_button task
@@ -109,13 +109,13 @@ int main(void)
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_ERROR_NOT_FOUND);
 
   // Initialize BLE - does not start advertising
-  status |= task_advertisement_init();
-  status |= task_advertisement_start();
-  // status |= task_gatt_init();
+  //status |= task_advertisement_init();
+  //status |= task_advertisement_start();
+  status |= task_gatt_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
-  status |= task_flash_init();
-  status |= task_flash_demo();
+  //status |= task_flash_init();
+  //status |= task_flash_demo();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Turn RED led off. Turn GREEN LED on if no errors occured
@@ -137,7 +137,7 @@ int main(void)
     // Turn on activity led
     status |= task_led_write(RUUVI_BOARD_LED_RED, RUUVI_BOARD_LEDS_ACTIVE_STATE);
     // Execute scheduled tasks
-     status |= ruuvi_platform_scheduler_execute();
+    status |= ruuvi_platform_scheduler_execute();
 
     // Reset only on fatal error
     RUUVI_DRIVER_ERROR_CHECK(status, ~RUUVI_DRIVER_ERROR_FATAL);
