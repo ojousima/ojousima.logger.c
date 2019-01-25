@@ -10,3 +10,6 @@
 [submodule "ruuvi.libraries.c"]
 	path = ruuvi.libraries.c
 	url = https://github.com/ruuvi/ruuvi.libraries.c
+[submodule "ojousima.ruuvi_endpoints.c"]
+	path = ojousima.ruuvi_endpoints.c
+	url = https://github.com/ojousima/ojousima.ruuvi_endpoints.c.git

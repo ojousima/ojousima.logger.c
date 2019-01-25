@@ -72,4 +72,6 @@ ruuvi_driver_status_t task_advertisement_send_3(void);
  */
 ruuvi_driver_status_t task_advertisement_send_5(void);
 
+ruuvi_driver_status_t task_advertisement_send_ac(void);
+
 #endif

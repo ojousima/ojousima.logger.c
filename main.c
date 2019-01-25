@@ -25,9 +25,35 @@
 #include "task_scheduler.h"
 #include "task_spi.h"
 #include "task_timer.h"
+#include "test_library.h"
 #include "test_sensor.h"
 
 #include <stdio.h>
+
+// Function handles and clears exception flags in FPSCR register and at the stack.
+// During interrupt, handler execution FPU registers might be copied to the stack
+// (see lazy stacking option) and it is necessary to clear data at the stack
+// which will be recovered in the return from interrupt handling.
+void FPU_IRQHandler(void)
+{
+ 
+    // Prepare pointer to stack address with pushed FPSCR register (0x40 is FPSCR register offset in stacked data)
+    uint32_t * fpscr = (uint32_t * )(FPU->FPCAR + 0x40);
+    // Execute FPU instruction to activate lazy stacking
+    (void)__get_FPSCR();
+    // Check exception flags
+    // Critical FPU exceptions signaled:
+    // - IOC - Invalid Operation cumulative exception bit.
+    // - DZC - Division by Zero cumulative exception bit.
+    // - OFC - Overflow cumulative exception bit.
+    if (*fpscr & 0x07)
+    {
+      ruuvi_platform_log(RUUVI_INTERFACE_LOG_WARNING, "FPU Error \r\n");
+    }
+    
+    // Clear flags in stacked FPSCR register. To clear IDC, IXC, UFC, OFC, DZC and IOC flags, use 0x0000009F mask.
+    *fpscr = *fpscr & ~(0x0000009F);
+}
 
 int main(void)
 {
@@ -72,15 +98,21 @@ int main(void)
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   #if RUUVI_RUN_TESTS
+  // Enable FPU interrupt/
+
+  NVIC_SetPriority(FPU_IRQn, APP_IRQ_PRIORITY_LOW);
+  NVIC_ClearPendingIRQ(FPU_IRQn);
+  NVIC_EnableIRQ(FPU_IRQn);
   // Tests will initialize and uninitialize the sensors, run this before using them in application
   ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Running extended self-tests, this might take a while\r\n");
+  test_library_run();
   test_sensor_run();
 
   // Print unit test status, activate tests by building in DEBUG configuration under SES
   size_t tests_run, tests_passed;
   test_sensor_status(&tests_run, &tests_passed);
   char message[128] = {0};
-  snprintf(message, sizeof(message), "Tests ran: %u, passed: %u\r\n", tests_run, tests_passed);
+  snprintf(message, sizeof(message), "Sensor tests ran: %u, passed: %u\r\n", tests_run, tests_passed);
   ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
   // Init watchdog after tests. Normally init at the start of the program
   ruuvi_interface_watchdog_init(APPLICATION_WATCHDOG_INTERVAL_MS);
@@ -91,7 +123,7 @@ int main(void)
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Initialize ADC
-  // status |= task_adc_init();
+  status |= task_adc_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Initialize button with on_button task
@@ -109,9 +141,9 @@ int main(void)
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_ERROR_NOT_FOUND);
 
   // Initialize BLE - does not start advertising
-  //status |= task_advertisement_init();
-  //status |= task_advertisement_start();
-  status |= task_gatt_init();
+  status |= task_advertisement_init();
+  status |= task_advertisement_start();
+  //status |= task_gatt_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   //status |= task_flash_init();

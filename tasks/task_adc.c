@@ -201,10 +201,11 @@ ruuvi_driver_status_t task_adc_data_get(ruuvi_interface_adc_data_t* const data)
 
 ruuvi_driver_status_t task_adc_battery_get(ruuvi_interface_adc_data_t* const data)
 {
+  data->timestamp_ms = t_sample;
+  data->adc_v = RUUVI_DRIVER_FLOAT_INVALID;
   if(NULL == data) { return RUUVI_DRIVER_ERROR_NULL; }
   if(NULL == adc_sensor.data_get) { return RUUVI_DRIVER_ERROR_INVALID_STATE; }
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
-  data->timestamp_ms = t_sample;
   if(APPLICATION_BATTERY_VOLTAGE_SIMPLE) { err_code |= task_adc_data_get(data); }
   if(APPLICATION_BATTERY_VOLTAGE_RADIO)  { data->adc_v = after_tx; }
   if(APPLICATION_BATTERY_VOLTAGE_DROOP)  { data->adc_v = droop; }

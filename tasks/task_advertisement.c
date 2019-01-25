@@ -6,6 +6,7 @@
  **/
 
 #include "application_config.h"
+#include "ojousima_endpoint_ac.h"
 #include "ruuvi_boards.h"
 #include "ruuvi_driver_error.h"
 #include "ruuvi_endpoint_3.h"
@@ -31,8 +32,9 @@ static void task_advertisement_scheduler_task(void *p_event_data, uint16_t event
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
   // Update BLE data
-  if(APPLICATION_DATA_FORMAT == 3) { err_code |= task_advertisement_send_3(); }
-  if(APPLICATION_DATA_FORMAT == 5) { err_code |= task_advertisement_send_5(); }
+  if(APPLICATION_DATA_FORMAT == 3)    { err_code |= task_advertisement_send_3(); }
+  if(APPLICATION_DATA_FORMAT == 5)    { err_code |= task_advertisement_send_5(); }
+  if(APPLICATION_DATA_FORMAT == 0xAC) { err_code |= task_advertisement_send_ac(); }
   if(RUUVI_DRIVER_SUCCESS == err_code) { ruuvi_interface_watchdog_feed(); }
 
 }
@@ -140,6 +142,47 @@ ruuvi_driver_status_t task_advertisement_send_5(void)
   ruuvi_interface_communication_message_t message;
   message.data_length = RUUVI_ENDPOINT_5_DATA_LENGTH;
   ruuvi_endpoint_5_encode(message.data, &data, RUUVI_DRIVER_FLOAT_INVALID);
+  err_code |= channel.send(&message);
+
+  return err_code;
+}
+
+ruuvi_driver_status_t task_advertisement_send_ac(void)
+{
+  ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
+  static uint16_t sequence = 0;
+  sequence++;
+
+  // TODO: Remove hardcoding, add sequence number getter
+  if(0xFFFF == sequence) { sequence = 0; }
+  ruuvi_interface_acceleration_data_t p2p;
+  ruuvi_interface_acceleration_data_t rms;
+  ruuvi_interface_acceleration_data_t dev;
+  ruuvi_interface_adc_data_t battery;
+
+  // Get data from sensors
+  err_code |= task_acceleration_p2p_get(&p2p);
+  err_code |= task_acceleration_rms_get(&rms);
+  err_code |= task_acceleration_dev_get(&dev);
+  err_code |= task_adc_battery_get(&battery);
+
+  app_endpoint_ac_data_t data;
+  data.p2p[APP_ENDPOINT_AC_X_INDEX] = p2p.x_g;
+  data.p2p[APP_ENDPOINT_AC_Y_INDEX] = p2p.y_g;
+  data.p2p[APP_ENDPOINT_AC_Z_INDEX] = p2p.z_g;
+  data.rms[APP_ENDPOINT_AC_X_INDEX] = rms.x_g;
+  data.rms[APP_ENDPOINT_AC_Y_INDEX] = rms.y_g;
+  data.rms[APP_ENDPOINT_AC_Z_INDEX] = rms.z_g;
+  data.dev[APP_ENDPOINT_AC_X_INDEX] = dev.x_g;
+  data.dev[APP_ENDPOINT_AC_Y_INDEX] = dev.y_g;
+  data.dev[APP_ENDPOINT_AC_Z_INDEX] = dev.z_g;
+  data.sequence = sequence;
+  data.voltage = battery.adc_v;
+
+
+  ruuvi_interface_communication_message_t message;
+  message.data_length = RUUVI_ENDPOINT_5_DATA_LENGTH;
+  app_endpoint_ac_encode(message.data, &data, RUUVI_DRIVER_FLOAT_INVALID);
   err_code |= channel.send(&message);
 
   return err_code;

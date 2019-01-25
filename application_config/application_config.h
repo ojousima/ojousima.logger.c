@@ -9,7 +9,7 @@
 #define APPLICATION_CONFIG_H
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
-#define APPLICATION_FW_VERSION "Streamer 1.0.0"
+#define APPLICATION_FW_VERSION "Acceleration 1.0.0"
 
 // Pick a power of 2 for nRF5 backend. 128 is recommended.
 #define APPLICATION_LOG_BUFFER_SIZE              256
@@ -95,7 +95,7 @@
 #define APPLICATION_ADC_DSPFUNC            RUUVI_DRIVER_SENSOR_DSP_LAST
 #define APPLICATION_ADC_DSPPARAM           1
 #define APPLICATION_ADC_MODE               RUUVI_DRIVER_SENSOR_CFG_SINGLE // Note: call to task_adc_sample will leave the ADC in single-shot mode. Use data get only in continuous mode
-#define APPLICATION_ADC_SAMPLE_INTERVAL_MS 30000 // Valid for single mode
+#define APPLICATION_ADC_SAMPLE_INTERVAL_MS 3000 // Valid for single mode
 
 /**
  * Bluetooth configuration
@@ -103,10 +103,10 @@
  */
 // Avoid "even" values such as 100 or 1000 to eventually drift apart from the devices transmitting at same interval
 #ifndef APPLICATION_ADVERTISING_CONFIGURED
-  #define APPLICATION_ADVERTISING_INTERVAL              1010
+  #define APPLICATION_ADVERTISING_INTERVAL              100
   #define APPLICATION_CONNECTION_ADVERTISEMENT_INTERVAL 100
   #define APPLICATION_ADVERTISING_POWER                 RUUVI_BOARD_TX_POWER_MAX
-  #define APPLICATION_DATA_FORMAT                       5
+  #define APPLICATION_DATA_FORMAT                       0xAC
 #endif
 
 // Apple connection parameter quidelines:
