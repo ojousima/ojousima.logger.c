@@ -9,7 +9,7 @@
 #define APPLICATION_CONFIG_H
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
-#define APPLICATION_FW_VERSION "Acceleration 1.0.0"
+#define APPLICATION_FW_VERSION "Acceleration broadcaster 1.1.0"
 
 // Pick a power of 2 for nRF5 backend. 128 is recommended.
 #define APPLICATION_LOG_BUFFER_SIZE              256
@@ -52,7 +52,7 @@
   #define APPLICATION_ENVIRONMENTAL_DSPPARAM   RUUVI_DRIVER_SENSOR_CFG_MAX
 
   // (RUUVI_DRIVER_SENSOR_CFG_)SLEEP, SINGLE or CONTINUOUS
-  #define APPLICATION_ENVIRONMENTAL_MODE       RUUVI_DRIVER_SENSOR_CFG_CONTINUOUS
+  #define APPLICATION_ENVIRONMENTAL_MODE       RUUVI_DRIVER_SENSOR_CFG_SLEEP
 #endif
 
 
@@ -65,6 +65,8 @@
 #ifndef APPLICATION_ACCELERATION_CONFIGURED
   // 1, 10, 25, 50, 100, 200 for LIS2DH12
   #define APPLICATION_ACCELEROMETER_SAMPLERATE RUUVI_DRIVER_SENSOR_CFG_MAX
+  // How many FIFO datasets per advertisement. Minimum 2, maximum 10
+  #define APPLICATION_ACCELEROMETER_DATASETS 4
 
   // 8, 10, 12 for LIS2DH12
   #define APPLICATION_ACCELEROMETER_RESOLUTION 10
@@ -103,10 +105,11 @@
  */
 // Avoid "even" values such as 100 or 1000 to eventually drift apart from the devices transmitting at same interval
 #ifndef APPLICATION_ADVERTISING_CONFIGURED
-  #define APPLICATION_ADVERTISING_INTERVAL              100
+  #define APPLICATION_ADVERTISING_INTERVAL              (1000 * APPLICATION_ACCELEROMETER_DATASETS * 32 / 400) 
   #define APPLICATION_CONNECTION_ADVERTISEMENT_INTERVAL 100
   #define APPLICATION_ADVERTISING_POWER                 RUUVI_BOARD_TX_POWER_MAX
   #define APPLICATION_DATA_FORMAT                       0xAC
+  #define APPLICATION_STANDBY_INTERVAL                  9900
 #endif
 
 // Apple connection parameter quidelines:
@@ -138,7 +141,7 @@
  * Task scheduler configuration
  */
 #define APPLICATION_TASK_DATA_MAX_SIZE 0
-#define APPLICATION_TASK_QUEUE_MAX_LENGTH 10
+#define APPLICATION_TASK_QUEUE_MAX_LENGTH 20
 
 /**
  * Flags which determine which c-modules are compiled in.

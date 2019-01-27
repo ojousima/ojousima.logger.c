@@ -28,7 +28,7 @@ RUUVI_PLATFORM_TIMER_ID_DEF(advertisement_timer);
 static ruuvi_interface_communication_t channel;
 
 //handler for scheduled advertisement event
-static void task_advertisement_scheduler_task(void *p_event_data, uint16_t event_size)
+void task_advertisement_scheduler_task(void *p_event_data, uint16_t event_size)
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
   // Update BLE data
@@ -64,8 +64,7 @@ ruuvi_driver_status_t task_advertisement_uninit(void)
 
 ruuvi_driver_status_t task_advertisement_start(void)
 {
-  // TODO: Synchronise data update to advertisement TX
-  return ruuvi_platform_timer_start(advertisement_timer, APPLICATION_ADVERTISING_INTERVAL);
+  return ruuvi_platform_scheduler_event_put(NULL, 0, task_advertisement_scheduler_task);
 }
 
 ruuvi_driver_status_t task_advertisement_stop(void)
