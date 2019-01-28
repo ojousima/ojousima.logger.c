@@ -51,7 +51,7 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
   static ruuvi_interface_acceleration_data_t data[APPLICATION_ACCELEROMETER_DATASETS * 32];
   size_t data_len = sizeof(data)/sizeof(ruuvi_interface_acceleration_data_t);
   err_code |= ruuvi_interface_lis2dh12_fifo_read(&data_len, &(data[series_length]));
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "FIFO\r\n");
+  ruuvi_platform_log(RUUVI_INTERFACE_LOG_DEBUG, "FIFO\r\n");
   if(!data_len)
   {
     return;
@@ -88,11 +88,11 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
     {*/
     char message[128] = {0};
     snprintf(message, sizeof(message), "P2P: X: %0.3f, Y: %0.3f, Z: %0.3f\r\n", m_p2p[0], m_p2p[1], m_p2p[2]);
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
+    ruuvi_platform_log(RUUVI_INTERFACE_LOG_DEBUG, message);
     snprintf(message, sizeof(message), "RMS: X: %0.3f, Y: %0.3f, Z: %0.3f\r\n", m_rms[0], m_rms[1], m_rms[2]);
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
+    ruuvi_platform_log(RUUVI_INTERFACE_LOG_DEBUG, message);
     snprintf(message, sizeof(message), "DEV: X: %0.3f, Y: %0.3f, Z: %0.3f\r\n\r\n", sqrtf(m_var[0]), sqrtf(m_var[1]), sqrtf(m_var[2]));
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
+    ruuvi_platform_log(RUUVI_INTERFACE_LOG_DEBUG, message);
     //}
     series_counter = 0;
     series_length = 0;
@@ -155,7 +155,7 @@ static void task_acceleration_movement_task(void *p_event_data, uint16_t event_s
   err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(true);
   err_code |= ruuvi_platform_timer_stop(update_timer);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Activity\r\n");
+  ruuvi_platform_log(RUUVI_INTERFACE_LOG_DEBUG, "Activity\r\n");
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
@@ -173,6 +173,7 @@ static void on_movement (ruuvi_interface_gpio_evt_t event)
 static void task_acceleration_scheduler_task(void *p_event_data, uint16_t event_size)
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
+  char msg[128];
 
   ruuvi_driver_sensor_configuration_t config;
   config.samplerate    = 10; // Slow down to 10 Hz sampling while waiting for activity
@@ -183,7 +184,9 @@ static void task_acceleration_scheduler_task(void *p_event_data, uint16_t event_
   config.mode          = APPLICATION_ACCELEROMETER_MODE;
   err_code |= task_acceleration_configure(&config);
   float ths = APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD;
-  err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(true, &ths);  
+  err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(true, &ths);
+  snprintf(msg, 128, "Activity threshold is %0.3f g\r\n", ths);
+  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, msg);
   err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(false);
   err_code |= ruuvi_interface_communication_ble4_advertising_tx_interval_set(APPLICATION_STANDBY_INTERVAL);
   err_code |= ruuvi_platform_timer_start(update_timer, 3000);
