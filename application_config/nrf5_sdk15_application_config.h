@@ -50,9 +50,10 @@
 #define NRF_SPI_DRV_MISO_PULLUP_CFG        0
 #define SPI0_ENABLED                       APPLICATION_SPI_ENABLED
 #define SPI0_USE_EASY_DMA                  0
+#define NRFX_SPI0_ENABLED                  SPI_ENABLED
 
 // 0 is used by the softdevice, 1 is used by scheduler / timer
-#define NRF5_SDK15_RTC_INSTANCE 2
+#define NRF5_SDK15_RTC_INSTANCE            2
 
 #define BLE_DFU_ENABLED APPLICATION_COMMUNICATION_BLUETOOTH_ENABLED
 #define BLE_DIS_ENABLED APPLICATION_COMMUNICATION_BLUETOOTH_ENABLED
@@ -61,10 +62,10 @@
                                   BLE_DIS_ENABLED + \
                                   BLE_NUS_ENABLED
 
-#define MIN_CONN_INTERVAL                MSEC_TO_UNITS(APPLICATION_GATT_CONN_INTERVAL_MIN_MS, UNIT_1_25_MS)    /**< Minimum acceptable connection interval (0.02 seconds). */
-#define MAX_CONN_INTERVAL                MSEC_TO_UNITS((APPLICATION_GATT_CONN_INTERVAL_MAX_MS), (UNIT_1_25_MS))    /**< Maximum acceptable connection interval (0.40 second). */
+#define MIN_CONN_INTERVAL                MSEC_TO_UNITS(APPLICATION_GATT_CONN_INTERVAL_MIN_MS, UNIT_1_25_MS)     /**< Minimum acceptable connection interval (0.02 seconds). */
+#define MAX_CONN_INTERVAL                MSEC_TO_UNITS((APPLICATION_GATT_CONN_INTERVAL_MAX_MS), (UNIT_1_25_MS)) /**< Maximum acceptable connection interval (0.40 second). */
 #define SLAVE_LATENCY                    APPLICATION_GATT_CONN_SLAVE_SKIP_INTERVALS                             /**< Slave latency. */
-#define CONN_SUP_TIMEOUT                 MSEC_TO_UNITS((APPLICATION_GATT_CONN_TIMEOUT_MS), (UNIT_10_MS))            /**< Connection supervisory timeout (4 seconds). */
+#define CONN_SUP_TIMEOUT                 MSEC_TO_UNITS((APPLICATION_GATT_CONN_TIMEOUT_MS), (UNIT_10_MS))        /**< Connection supervisory timeout (4 seconds). */
 
 #define FDS_VIRTUAL_PAGES APPLICATION_FLASH_DATA_PAGES_NUMBER
 

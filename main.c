@@ -30,39 +30,14 @@
 
 #include <stdio.h>
 
-// Function handles and clears exception flags in FPSCR register and at the stack.
-// During interrupt, handler execution FPU registers might be copied to the stack
-// (see lazy stacking option) and it is necessary to clear data at the stack
-// which will be recovered in the return from interrupt handling.
-void FPU_IRQHandler(void)
-{
- 
-    // Prepare pointer to stack address with pushed FPSCR register (0x40 is FPSCR register offset in stacked data)
-    uint32_t * fpscr = (uint32_t * )(FPU->FPCAR + 0x40);
-    // Execute FPU instruction to activate lazy stacking
-    (void)__get_FPSCR();
-    // Check exception flags
-    // Critical FPU exceptions signaled:
-    // - IOC - Invalid Operation cumulative exception bit.
-    // - DZC - Division by Zero cumulative exception bit.
-    // - OFC - Overflow cumulative exception bit.
-    if (*fpscr & 0x07)
-    {
-      ruuvi_platform_log(RUUVI_INTERFACE_LOG_WARNING, "FPU Error \r\n");
-    }
-    
-    // Clear flags in stacked FPSCR register. To clear IDC, IXC, UFC, OFC, DZC and IOC flags, use 0x0000009F mask.
-    *fpscr = *fpscr & ~(0x0000009F);
-}
-
 int main(void)
 {
   // Init logging
   ruuvi_driver_status_t status = RUUVI_DRIVER_SUCCESS;
-  status |= ruuvi_platform_log_init(APPLICATION_LOG_LEVEL);
+  status |= ruuvi_interface_log_init(APPLICATION_LOG_LEVEL);
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Program start \r\n");
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Program start \r\n");
 
   // Init watchdog here if tests are not being run
   #if (!RUUVI_RUN_TESTS)
@@ -71,11 +46,11 @@ int main(void)
   #endif
 
   // Init yield
-  status |= ruuvi_platform_yield_init();
+  status |= ruuvi_interface_yield_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Init GPIO
-  status |= ruuvi_platform_gpio_init();
+  status |= ruuvi_interface_gpio_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Initialize LED gpio pins, turn RED led on.
@@ -98,13 +73,8 @@ int main(void)
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   #if RUUVI_RUN_TESTS
-  // Enable FPU interrupt/
-
-  NVIC_SetPriority(FPU_IRQn, APP_IRQ_PRIORITY_LOW);
-  NVIC_ClearPendingIRQ(FPU_IRQn);
-  NVIC_EnableIRQ(FPU_IRQn);
   // Tests will initialize and uninitialize the sensors, run this before using them in application
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Running extended self-tests, this might take a while\r\n");
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Running extended self-tests, this might take a while\r\n");
   test_library_run();
   test_sensor_run();
 
@@ -113,7 +83,7 @@ int main(void)
   test_sensor_status(&tests_run, &tests_passed);
   char message[128] = {0};
   snprintf(message, sizeof(message), "Sensor tests ran: %u, passed: %u\r\n", tests_run, tests_passed);
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, message);
   // Init watchdog after tests. Normally init at the start of the program
   ruuvi_interface_watchdog_init(APPLICATION_WATCHDOG_INTERVAL_MS);
   #endif
@@ -155,7 +125,7 @@ int main(void)
   if(RUUVI_DRIVER_SUCCESS == status)
   {
     status |= task_led_write(RUUVI_BOARD_LED_GREEN, TASK_LED_ON);
-    ruuvi_platform_delay_ms(1000);
+    ruuvi_interface_delay_ms(1000);
   }
   // Reset any previous errors, turn LEDs off
   status = task_led_write(RUUVI_BOARD_LED_GREEN, TASK_LED_OFF);
@@ -165,11 +135,11 @@ int main(void)
     // Turn off activity led
     status = task_led_write(RUUVI_BOARD_LED_RED, !RUUVI_BOARD_LEDS_ACTIVE_STATE);
     // Sleep
-    status |= ruuvi_platform_yield();
+    status |= ruuvi_interface_yield();
     // Turn on activity led
     status |= task_led_write(RUUVI_BOARD_LED_RED, RUUVI_BOARD_LEDS_ACTIVE_STATE);
     // Execute scheduled tasks
-    status |= ruuvi_platform_scheduler_execute();
+    status |= ruuvi_interface_scheduler_execute();
 
     // Reset only on fatal error
     RUUVI_DRIVER_ERROR_CHECK(status, ~RUUVI_DRIVER_ERROR_FATAL);

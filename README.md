@@ -27,9 +27,16 @@ Please let us know your thoughts on the direction and structure of the project. 
 Is the structure of the project sensible to you? Pull requests and GitHub issues are welcome, but new features will not be accepted at this time. 
 
 # Licensing
-Ruuvi code is BSD-3 licensed. Submodules and external dependencies have their own licenses, which generally are BSD-compatible.
+Ruuvi code is BSD-3 licensed. Submodules and external dependencies have their own licenses, which are BSD-compatible.
 
 # Changelog
+## 3.19.0 
+ - Refactor naming scheme
+ - Support doxygen
+
+## 3.18.0
+ - Add flash storage
+
 ## 3.17.0
 - Add NFC writes to tag
 - Disable GATT

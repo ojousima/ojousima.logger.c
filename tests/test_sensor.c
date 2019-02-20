@@ -380,7 +380,7 @@ ruuvi_driver_status_t test_sensor_modes(ruuvi_driver_sensor_init_fp init, ruuvi_
   ruuvi_driver_sensor_data_t old_data = {0};
   memcpy(&old_data, &new_data, sizeof(ruuvi_driver_sensor_data_t));
   mode = RUUVI_DRIVER_SENSOR_CFG_SINGLE;
-  ruuvi_platform_delay_ms(2);
+  ruuvi_interface_delay_ms(2);
   err_code = DUT.mode_set(&mode);
   err_code = DUT.data_get(&new_data);
   if(RUUVI_DRIVER_SUCCESS != err_code || (0 == memcmp (&old_data, &new_data, sizeof(ruuvi_driver_sensor_data_t))))
@@ -394,7 +394,7 @@ ruuvi_driver_status_t test_sensor_modes(ruuvi_driver_sensor_init_fp init, ruuvi_
 
   // - Sensor must same values, including timestamp, on successive calls to DATA_GET after SINGLE sample
   memcpy(&old_data, &new_data, sizeof(ruuvi_driver_sensor_data_t));
-  ruuvi_platform_delay_ms(10);
+  ruuvi_interface_delay_ms(10);
   err_code = DUT.data_get(&new_data);
   if(RUUVI_DRIVER_SUCCESS != err_code || 0 != memcmp (&old_data, &new_data, sizeof(ruuvi_driver_sensor_data_t)))
   {
@@ -458,12 +458,12 @@ ruuvi_driver_status_t test_sensor_modes(ruuvi_driver_sensor_init_fp init, ruuvi_
   mode = RUUVI_DRIVER_SENSOR_CFG_CONTINUOUS;
   err_code = DUT.mode_set(&mode);
   uint32_t interval = (1000 / (samplerate+1));
-  ruuvi_platform_delay_ms(2*interval);
+  ruuvi_interface_delay_ms(2*interval);
   err_code |= DUT.data_get(&old_data);
   int retries = 0;
   for(; retries < MAX_RETRIES; retries++)
   {
-    ruuvi_platform_delay_ms(2*interval);
+    ruuvi_interface_delay_ms(2*interval);
     err_code |= DUT.data_get(&new_data);
     if(old_data.timestamp == new_data.timestamp || RUUVI_DRIVER_SUCCESS != err_code)
     {
@@ -531,11 +531,11 @@ void test_sensor_run(void)
 {
   // Give a few milliseconds between tests to flush the logs
   test_adc_run();
-  ruuvi_platform_delay_ms(20);
+  ruuvi_interface_delay_ms(20);
   test_environmental_run();
-  ruuvi_platform_delay_ms(20);
+  ruuvi_interface_delay_ms(20);
   test_acceleration_run();
-  ruuvi_platform_delay_ms(20);
+  ruuvi_interface_delay_ms(20);
 }
 #else
 // Dummy implementation

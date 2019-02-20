@@ -9,13 +9,13 @@
 #define APPLICATION_CONFIG_H
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
-#define APPLICATION_FW_VERSION "Acceleration broadcaster 1.1.0"
+#define APPLICATION_FW_VERSION "Ruuvi Logger 0.0.1"
 
-// Pick a power of 2 for nRF5 backend. 128 is recommended.
-#define APPLICATION_LOG_BUFFER_SIZE              256
+// Pick a power of 2 for nRF5 backend. at least 128 is recommended.
+#define APPLICATION_LOG_BUFFER_SIZE           256
 
 // Use nRF5 SDK15
-#define NRF5_SDK15_PLATFORM_ENABLED              1
+#define RUUVI_NRF5_SDK15_ENABLED              1
 
 /**
  * Data format configuration
@@ -42,11 +42,11 @@
   #define APPLICATION_ENVIRONMENTAL_RESOLUTION RUUVI_DRIVER_SENSOR_CFG_DEFAULT
   #define APPLICATION_ENVIRONMENTAL_SCALE      RUUVI_DRIVER_SENSOR_CFG_DEFAULT
 
-  // Valid values for BME280 are: (RUUVI_DRIVER_SENSOR_DSP_)LAST, IIR, OS
+  // Valid values for BME280 are: (RUUVI_DRIVER_SENSOR_DSP_)LAST, LOW_PASS, OS
   // IIR slows step response but lowers noise
   // OS increases power consumption but lowers noise.
   // See https://blog.ruuvi.com/humidity-sensor-673c5b7636fc and https://blog.ruuvi.com/dsp-compromises-3f264a6b6344
-  #define APPLICATION_ENVIRONMENTAL_DSPFUNC    RUUVI_DRIVER_SENSOR_DSP_IIR
+  #define APPLICATION_ENVIRONMENTAL_DSPFUNC    RUUVI_DRIVER_SENSOR_DSP_LOW_PASS
 
   // No effect on _LAST, use 1. On _OS and _IIR valid values are 2, 4, 8 and 16.
   #define APPLICATION_ENVIRONMENTAL_DSPPARAM   RUUVI_DRIVER_SENSOR_CFG_MAX
@@ -85,6 +85,7 @@
   #define APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD 0.100f
 #endif
 
+#define RUUVI_INTERFACE_ACCELERATION_ENABLED 1
 // Allow LIS2DH12 support compilation
 #define RUUVI_INTERFACE_ACCELERATION_LIS2DH12_ENABLED 1
 
@@ -163,6 +164,7 @@
 #define APPLICATION_SCHEDULER_ENABLED               1
 #define APPLICATION_SPI_ENABLED                     1
 #define APPLICATION_TIMER_ENABLED                   1
+#define APPLICATION_TIMER_MAX_INSTANCES             10 ///< Timers are allocated statically on RAM
 #define APPLICATION_WATCHDOG_ENABLED                1
 #define APPLICATION_WATCHDOG_INTERVAL_MS            120000u
 #define APPLICATION_YIELD_ENABLED                   1

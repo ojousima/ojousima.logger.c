@@ -37,20 +37,20 @@ static void task_gatt_queue_process(void *p_event_data, uint16_t event_size)
   if(NULL == channel.send) { return; }
   if(ringbuffer_empty(&tx_buffer))
   { 
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Buffer processed\r\n");
+    ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Buffer processed\r\n");
     return; 
   }
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
   static uint64_t last = 0;
   static uint8_t processed = 0;
   char log[128];
-  snprintf(log, 128, "Processed %d elements in %lu ms\r\n", processed, (uint32_t)ruuvi_platform_rtc_millis()-last);
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, log);
+  snprintf(log, 128, "Processed %d elements in %lu ms\r\n", processed, (uint32_t)ruuvi_interface_rtc_millis()-last);
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, log);
   processed = 0;
   ruuvi_interface_communication_message_t* p_msg;
   
   // Queue as many transmissions as possible
-  last = ruuvi_platform_rtc_millis();
+  last = ruuvi_interface_rtc_millis();
   do
   {
     if(buffer_index > ringbuffer_get_count(&tx_buffer)) { break; }
@@ -136,7 +136,7 @@ ruuvi_driver_status_t task_gatt_on_gatt(ruuvi_interface_communication_evt_t evt,
   switch(evt)
   {
     case RUUVI_INTERFACE_COMMUNICATION_CONNECTED:
-      ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Connected \r\n");
+      ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Connected \r\n");
       err_code |= task_acceleration_fifo_use(true);
       memcpy(msg.data, "Hello! Here's data!", 20);
       msg.data_length = 20;
@@ -146,7 +146,7 @@ ruuvi_driver_status_t task_gatt_on_gatt(ruuvi_interface_communication_evt_t evt,
 
     // TODO: Handle case where connection was made but NUS was not registered
     case RUUVI_INTERFACE_COMMUNICATION_DISCONNECTED:
-      ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Disconnected \r\n");
+      ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Disconnected \r\n");
       err_code |= task_acceleration_fifo_use(false);
       // Todo: data advertising
       ruuvi_interface_communication_ble4_gatt_advertise_connectablity(true, "Ruuvi", true, true);
@@ -158,7 +158,7 @@ ruuvi_driver_status_t task_gatt_on_gatt(ruuvi_interface_communication_evt_t evt,
       ringbuffer_popqueue(&tx_buffer, &msg);
       if(0 == buffer_index)
       {
-        ruuvi_platform_scheduler_event_put(NULL, 0,  task_gatt_queue_process);
+        ruuvi_interface_scheduler_event_put(NULL, 0,  task_gatt_queue_process);
         ruuvi_interface_watchdog_feed();
       }
       break;
@@ -190,13 +190,13 @@ ruuvi_driver_status_t task_gatt_send(ruuvi_interface_communication_message_t* co
   // Add to queue if there's room
   if(ringbuffer_full(&tx_buffer))
   {
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_WARNING, "FIFO out of space\r\n");
+    ruuvi_interface_log(RUUVI_INTERFACE_LOG_WARNING, "FIFO out of space\r\n");
     return RUUVI_DRIVER_ERROR_NO_MEM; 
   }
   ringbuffer_push(&tx_buffer, msg);
 
   // schedule queue to be transmitted if tx is not already ongoing
 
-  ruuvi_platform_scheduler_event_put(NULL, 0,  task_gatt_queue_process);
+  ruuvi_interface_scheduler_event_put(NULL, 0,  task_gatt_queue_process);
   return RUUVI_DRIVER_SUCCESS;
 }

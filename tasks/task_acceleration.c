@@ -28,8 +28,8 @@
 #include <string.h>
 #include <inttypes.h>
 
-RUUVI_PLATFORM_TIMER_ID_DEF(standby_timer);
-RUUVI_PLATFORM_TIMER_ID_DEF(update_timer);
+static ruuvi_interface_timer_id_t standby_timer;
+static ruuvi_interface_timer_id_t update_timer;
 static ruuvi_driver_sensor_t acceleration_sensor = {0};
 static uint8_t m_nbr_movements;
 static size_t series_counter = 0;
@@ -51,7 +51,7 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
   static ruuvi_interface_acceleration_data_t data[APPLICATION_ACCELEROMETER_DATASETS * 32];
   size_t data_len = sizeof(data)/sizeof(ruuvi_interface_acceleration_data_t);
   err_code |= ruuvi_interface_lis2dh12_fifo_read(&data_len, &(data[series_length]));
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "FIFO\r\n");
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "FIFO\r\n");
   if(!data_len)
   {
     return;
@@ -88,23 +88,23 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
     {*/
     char message[128] = {0};
     snprintf(message, sizeof(message), "P2P: X: %0.3f, Y: %0.3f, Z: %0.3f\r\n", m_p2p[0], m_p2p[1], m_p2p[2]);
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
+    ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, message);
     snprintf(message, sizeof(message), "RMS: X: %0.3f, Y: %0.3f, Z: %0.3f\r\n", m_rms[0], m_rms[1], m_rms[2]);
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
+    ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, message);
     snprintf(message, sizeof(message), "DEV: X: %0.3f, Y: %0.3f, Z: %0.3f\r\n\r\n", sqrtf(m_var[0]), sqrtf(m_var[1]), sqrtf(m_var[2]));
-    ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, message);
+    ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, message);
     //}
     series_counter = 0;
     series_length = 0;
     // signal that data should be updated.
-    err_code |= ruuvi_platform_scheduler_event_put(NULL, 0, task_advertisement_scheduler_task);
+    err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_advertisement_scheduler_task);
     // Reset standby timer if there was activity
     if(m_p2p[0] > APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD ||
        m_p2p[1] > APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD ||
        m_p2p[2] > APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD )
     {
-    err_code |= ruuvi_platform_timer_stop(standby_timer);
-    err_code |= ruuvi_platform_timer_start(standby_timer, 3 * APPLICATION_ADVERTISING_INTERVAL);
+    err_code |= ruuvi_interface_timer_stop(standby_timer);
+    err_code |= ruuvi_interface_timer_start(standby_timer, 3 * APPLICATION_ADVERTISING_INTERVAL);
     }
     RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
   }
@@ -113,7 +113,7 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
 
 static void on_fifo (ruuvi_interface_gpio_evt_t event)
 {
-  ruuvi_driver_status_t err_code = ruuvi_platform_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
+  ruuvi_driver_status_t err_code = ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
@@ -126,10 +126,10 @@ ruuvi_driver_status_t task_acceleration_configure(ruuvi_driver_sensor_configurat
   series_counter = 0;
   series_length = 0;
   
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "\r\nAttempting to configure accelerometer with:\r\n");
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "\r\nAttempting to configure accelerometer with:\r\n");
   ruuvi_interface_log_sensor_configuration(RUUVI_INTERFACE_LOG_INFO, config, "g");
   err_code |= acceleration_sensor.configuration_set(&acceleration_sensor, config);
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Actual configuration:\r\n");
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Actual configuration:\r\n");
   ruuvi_interface_log_sensor_configuration(RUUVI_INTERFACE_LOG_INFO, config, "g");
   err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(false, &ths);
   err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(false);
@@ -153,17 +153,17 @@ static void task_acceleration_movement_task(void *p_event_data, uint16_t event_s
   float ths = APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD;
   err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(false, &ths);  
   err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(true);
-  err_code |= ruuvi_platform_timer_stop(update_timer);
+  err_code |= ruuvi_interface_timer_stop(update_timer);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, "Activity\r\n");
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Activity\r\n");
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
 static void on_movement (ruuvi_interface_gpio_evt_t event)
 {
   m_nbr_movements++;
-  ruuvi_driver_status_t err_code = ruuvi_platform_scheduler_event_put(NULL, 0, task_acceleration_movement_task);
-  //err_code |= ruuvi_platform_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
+  ruuvi_driver_status_t err_code = ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_movement_task);
+  //err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
@@ -186,21 +186,21 @@ static void task_acceleration_scheduler_task(void *p_event_data, uint16_t event_
   err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(true, &ths);  
   err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(false);
   err_code |= ruuvi_interface_communication_ble4_advertising_tx_interval_set(APPLICATION_STANDBY_INTERVAL);
-  err_code |= ruuvi_platform_timer_start(update_timer, 3000);
+  err_code |= ruuvi_interface_timer_start(update_timer, 3000);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
 // Timer callback, schedule accelerometer event here.
 static void task_standby_timer_cb(void* p_context)
 {
-  ruuvi_driver_status_t err_code = ruuvi_platform_scheduler_event_put(NULL, 0, task_acceleration_scheduler_task);
+  ruuvi_driver_status_t err_code = ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_scheduler_task);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
 // Timer callback, schedule accelerometer event here.
 static void task_update_timer_cb(void* p_context)
 {
-  ruuvi_driver_status_t err_code = ruuvi_platform_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
+  ruuvi_driver_status_t err_code = ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
@@ -219,8 +219,8 @@ ruuvi_driver_status_t task_acceleration_init(void)
   m_nbr_movements = 0;
 
   // Initialize timer for accelerometer task. Note: the timer is not started.
-  err_code |= ruuvi_platform_timer_create(&standby_timer, RUUVI_INTERFACE_TIMER_MODE_SINGLE_SHOT, task_standby_timer_cb);
-  err_code |= ruuvi_platform_timer_create(&update_timer, RUUVI_INTERFACE_TIMER_MODE_REPEATED, task_update_timer_cb);
+  err_code |= ruuvi_interface_timer_create(&standby_timer, RUUVI_INTERFACE_TIMER_MODE_SINGLE_SHOT, task_standby_timer_cb);
+  err_code |= ruuvi_interface_timer_create(&update_timer, RUUVI_INTERFACE_TIMER_MODE_REPEATED, task_update_timer_cb);
 
   #if RUUVI_BOARD_ACCELEROMETER_LIS2DH12_PRESENT
     err_code = RUUVI_DRIVER_SUCCESS;
@@ -237,12 +237,12 @@ ruuvi_driver_status_t task_acceleration_init(void)
       err_code |= task_acceleration_fifo_use(true);
 
       // Let pins settle
-      ruuvi_platform_delay_ms(10);
+      ruuvi_interface_delay_ms(10);
       // Setup FIFO and activity interrupts
-      err_code |= ruuvi_platform_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC1_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_fifo);
-      err_code |= ruuvi_platform_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC2_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_movement);      
+      err_code |= ruuvi_interface_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC1_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_fifo);
+      err_code |= ruuvi_interface_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC2_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_movement);      
       //Enter standby in 5 sconds
-      ruuvi_platform_timer_start(standby_timer, 5000);
+      ruuvi_interface_timer_start(standby_timer, 5000);
 
       return err_code;
     }
@@ -261,13 +261,13 @@ ruuvi_driver_status_t task_acceleration_data_log(const ruuvi_interface_log_sever
   err_code |= acceleration_sensor.data_get(&data);
   char message[128] = {0};
   snprintf(message, sizeof(message), "Time: %lu\r\n", (uint32_t)(data.timestamp_ms&0xFFFFFFFF));
-  ruuvi_platform_log(level, message);
+  ruuvi_interface_log(level, message);
   snprintf(message, sizeof(message), "X: %.3f\r\n", data.x_g);
-  ruuvi_platform_log(level, message);
+  ruuvi_interface_log(level, message);
   snprintf(message, sizeof(message), "Y: %.3f\r\n" ,data.y_g);
-  ruuvi_platform_log(level, message);
+  ruuvi_interface_log(level, message);
   snprintf(message, sizeof(message), "Z: %.3f\r\n", data.z_g);
-  ruuvi_platform_log(level, message);
+  ruuvi_interface_log(level, message);
   return err_code;
 }
 

@@ -6,7 +6,7 @@
 #if RUUVI_RUN_TESTS
 static void print_test(const char* const msg)
 {
-  ruuvi_platform_log(RUUVI_INTERFACE_LOG_INFO, msg);
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, msg);
 }
 
 void test_library_run(void)
