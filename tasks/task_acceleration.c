@@ -234,15 +234,15 @@ ruuvi_driver_status_t task_acceleration_init(void)
     {
 
       err_code |= task_acceleration_configure(&config);
-      err_code |= task_acceleration_fifo_use(true);
+      //err_code |= task_acceleration_fifo_use(true);
 
       // Let pins settle
       ruuvi_interface_delay_ms(10);
       // Setup FIFO and activity interrupts
-      err_code |= ruuvi_interface_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC1_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_fifo);
-      err_code |= ruuvi_interface_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC2_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_movement);      
+      //err_code |= ruuvi_interface_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC1_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_fifo);
+      //err_code |= ruuvi_interface_gpio_interrupt_enable(RUUVI_BOARD_INT_ACC2_PIN, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_movement);      
       //Enter standby in 5 sconds
-      ruuvi_interface_timer_start(standby_timer, 5000);
+      //ruuvi_interface_timer_start(standby_timer, 5000);
 
       return err_code;
     }
@@ -286,6 +286,7 @@ ruuvi_driver_status_t task_acceleration_data_get(ruuvi_interface_acceleration_da
 ruuvi_driver_status_t task_acceleration_on_button(void)
 {
   // No implementation needed
+  return RUUVI_DRIVER_SUCCESS;
 }
 
 ruuvi_driver_status_t task_acceleration_movement_count_get(uint8_t * const count)

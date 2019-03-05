@@ -40,9 +40,20 @@
 #define NRFX_POWER_ENABLED             APPLICATION_POWER_ENABLED
 #define NRFX_POWER_CONFIG_IRQ_PRIORITY NRFX_CLOCK_CONFIG_IRQ_PRIORITY
 
+#define I2C_ENABLED                        APPLICATION_I2C_ENABLED
+#define I2C_INSTANCE                       1
+#define I2C1_ENABLED                       APPLICATION_I2C_ENABLED
+#define TWI_ENABLED                        I2C_ENABLED
+#define TWI1_ENABLED                       I2C_ENABLED
+#define TWI1_USE_EASY_DMA                  I2C_ENABLED
+#define NRFX_TWIM_ENABLED                  I2C_ENABLED
+#define NRFX_TWIM_ENABLED                  I2C_ENABLED
+#define NRFX_TWIM1_ENABLED                 I2C_ENABLED
+#define I2C_IRQ_PRIORITY                   7 //<! 2,3,6,7 are allowed. 
+
 #define SPI_ENABLED                        APPLICATION_SPI_ENABLED
-#define SPI_INSTANCE                       0
-#define SPI_IRQ_PRIORITY                   7
+#define SPI_INSTANCE                       0 //<! Do not use same instance with I2C 
+#define SPI_IRQ_PRIORITY                   7 //<! 2,3,6,7 are allowed. 
 #define SPI_DEFAULT_CONFIG_IRQ_PRIORITY    SPI_IRQ_PRIORITY
 // <0=> NRF_GPIO_PIN_NOPULL
 // <1=> NRF_GPIO_PIN_PULLDOWN

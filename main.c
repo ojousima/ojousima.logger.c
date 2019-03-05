@@ -18,6 +18,7 @@
 #include "task_environmental.h"
 #include "task_flash.h"
 #include "task_gatt.h"
+#include "task_i2c.h"
 #include "task_led.h"
 #include "task_nfc.h"
 #include "task_power.h"
@@ -58,8 +59,9 @@ int main(void)
   status |= task_led_write(RUUVI_BOARD_LED_RED, TASK_LED_ON);
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
-  // Initialize SPI
+  // Initialize SPI or I2C
   status |= task_spi_init();
+  status |= task_i2c_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
   // Initialize RTC, timer and scheduler
@@ -72,7 +74,7 @@ int main(void)
   status |= task_power_dcdc_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
-  #if RUUVI_RUN_TESTS
+  #if 1
   // Tests will initialize and uninitialize the sensors, run this before using them in application
   ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Running extended self-tests, this might take a while\r\n");
   test_library_run();
@@ -129,7 +131,7 @@ int main(void)
   }
   // Reset any previous errors, turn LEDs off
   status = task_led_write(RUUVI_BOARD_LED_GREEN, TASK_LED_OFF);
-
+  
   while (1)
   {
     // Turn off activity led

@@ -110,6 +110,9 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52.S \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52.c \
   $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/ojousima.ruuvi_endpoints.c/ojousima_endpoint_ac.c \
+  $(PROJ_DIR)/ojousima.ruuvi_endpoints.c/ojousima_endpoint_ba.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/ruuvi_driver_error.c \
   $(PROJ_DIR)/ruuvi.drivers.c/ruuvi_driver_sensor.c \
   $(PROJ_DIR)/ruuvi.drivers.c/BME280_driver/bme280.c \
   $(PROJ_DIR)/ruuvi.drivers.c/BME280_driver/selftest/bme280_selftest.c \
@@ -118,27 +121,34 @@ SRC_FILES += \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/log/ruuvi_interface_log.c \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/spi/ruuvi_interface_spi_bme280.c \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/spi/ruuvi_interface_spi_lis2dh12.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/adc/ruuvi_platform_adc_mcu.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_platform_communication.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_platform_communication_nfc.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_platform_communication_radio.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_platform_communication_ble4_advertising.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_platform_communication_ble4_gatt.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/environmental/ruuvi_platform_environmental_mcu.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/gpio/ruuvi_platform_gpio.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/gpio/ruuvi_platform_gpio_interrupt.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/log/ruuvi_platform_log.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/power/ruuvi_platform_power.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/rtc/ruuvi_platform_rtc_mcu.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/ruuvi_platform_error.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/scheduler/ruuvi_platform_scheduler.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/spi/ruuvi_platform_spi.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/timer/ruuvi_platform_timer.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/watchdog/ruuvi_platform_watchdog.c \
-  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/yield/ruuvi_platform_yield.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/adc/ruuvi_nrf5_sdk15_adc_mcu.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_nrf5_sdk15_communication.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_nrf5_sdk15_communication_nfc.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_nrf5_sdk15_communication_radio.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_nrf5_sdk15_communication_ble4_advertising.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/communication/ruuvi_nrf5_sdk15_communication_ble4_gatt.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/environmental/ruuvi_nrf5_sdk15_environmental_mcu.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/flash/ruuvi_nrf5_sdk15_flash.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/gpio/ruuvi_nrf5_sdk15_gpio.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/gpio/ruuvi_nrf5_sdk15_gpio_interrupt.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/log/ruuvi_nrf5_sdk15_log.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/power/ruuvi_nrf5_sdk15_power.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/rtc/ruuvi_nrf5_sdk15_rtc_mcu.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/ruuvi_nrf5_sdk15_error.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/scheduler/ruuvi_nrf5_sdk15_scheduler.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/spi/ruuvi_nrf5_sdk15_spi.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/timer/ruuvi_nrf5_sdk15_timer.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/watchdog/ruuvi_nrf5_sdk15_watchdog.c \
+  $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/yield/ruuvi_nrf5_sdk15_yield.c \
   $(PROJ_DIR)/ruuvi.drivers.c/STMems_Standard_C_drivers/lis2dh12_STdC/driver/lis2dh12_reg.c \
   $(PROJ_DIR)/ruuvi.endpoints.c/ruuvi_endpoint_3.c \
   $(PROJ_DIR)/ruuvi.endpoints.c/ruuvi_endpoint_5.c \
+  $(PROJ_DIR)/ruuvi.libraries.c/ruuvi_library_test.c \
+  $(PROJ_DIR)/ruuvi.libraries.c/analysis/ruuvi_library_peak2peak.c \
+  $(PROJ_DIR)/ruuvi.libraries.c/analysis/ruuvi_library_rms.c \
+  $(PROJ_DIR)/ruuvi.libraries.c/analysis/ruuvi_library_test_analysis.c \
+  $(PROJ_DIR)/ruuvi.libraries.c/analysis/ruuvi_library_variance.c \
+  $(PROJ_DIR)/ruuvi.libraries.c/data_structures/ringbuffer.c \
   $(PROJ_DIR)/tasks/task_acceleration.c \
   $(PROJ_DIR)/tasks/task_adc.c \
   $(PROJ_DIR)/tasks/task_advertisement.c \
@@ -155,6 +165,7 @@ SRC_FILES += \
   $(PROJ_DIR)/tests/test_acceleration.c \
   $(PROJ_DIR)/tests/test_adc.c \
   $(PROJ_DIR)/tests/test_environmental.c \
+  $(PROJ_DIR)/tests/test_library.c \
   $(PROJ_DIR)/tests/test_sensor.c
 
 # Include folders common to all targets
@@ -236,6 +247,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/modules/nrfx/mdk \
   $(SDK_ROOT)/integration/nrfx \
   $(PROJ_DIR)/application_config \
+  $(PROJ_DIR)/ojousima.ruuvi_endpoints.c/ \
   $(PROJ_DIR)/ruuvi.boards.c \
   $(PROJ_DIR)/ruuvi.drivers.c \
   $(PROJ_DIR)/ruuvi.drivers.c/BME280_driver \
@@ -244,6 +256,7 @@ INC_FOLDERS += \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/adc \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/communication \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/environmental \
+  $(PROJ_DIR)/ruuvi.drivers.c/interfaces/flash/ \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/gpio \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/log \
   $(PROJ_DIR)/ruuvi.drivers.c/interfaces/power \
@@ -256,6 +269,9 @@ INC_FOLDERS += \
   $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform \
   $(PROJ_DIR)/ruuvi.drivers.c/nrf5_sdk15_platform/timer/ \
   $(PROJ_DIR)/ruuvi.endpoints.c \
+  $(PROJ_DIR)/ruuvi.libraries.c \
+  $(PROJ_DIR)/ruuvi.libraries.c/analysis \
+  $(PROJ_DIR)/ruuvi.libraries.c/data_structures \
   $(PROJ_DIR)/ruuvi.drivers.c/STMems_Standard_C_drivers/lis2dh12_STdC/driver/ \
   $(PROJ_DIR)/tasks/ \
   $(PROJ_DIR)/tests/

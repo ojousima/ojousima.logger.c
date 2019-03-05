@@ -7,7 +7,12 @@
 ruuvi_driver_status_t task_led_init(void)
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
-  err_code |= ruuvi_interface_gpio_init();
+
+  if(!ruuvi_interface_gpio_is_init())
+  {
+    err_code |= ruuvi_interface_gpio_init();
+  }
+
   uint8_t leds[] = RUUVI_BOARD_LEDS_LIST;
   for(size_t ii = 0; ii < RUUVI_BOARD_LEDS_NUMBER; ii++)
   {

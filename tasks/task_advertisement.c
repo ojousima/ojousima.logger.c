@@ -64,7 +64,7 @@ ruuvi_driver_status_t task_advertisement_uninit(void)
 
 ruuvi_driver_status_t task_advertisement_start(void)
 {
-  return ruuvi_interface_scheduler_event_put(NULL, 0, task_advertisement_scheduler_task);
+  return ruuvi_interface_timer_start(advertisement_timer, 1000);
 }
 
 ruuvi_driver_status_t task_advertisement_stop(void)

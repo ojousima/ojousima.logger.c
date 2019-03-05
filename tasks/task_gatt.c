@@ -44,7 +44,7 @@ static void task_gatt_queue_process(void *p_event_data, uint16_t event_size)
   static uint64_t last = 0;
   static uint8_t processed = 0;
   char log[128];
-  snprintf(log, 128, "Processed %d elements in %lu ms\r\n", processed, (uint32_t)ruuvi_interface_rtc_millis()-last);
+  snprintf(log, 128, "Processed %d elements in %lu ms\r\n", processed, (uint32_t)(ruuvi_interface_rtc_millis()-last));
   ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, log);
   processed = 0;
   ruuvi_interface_communication_message_t* p_msg;
