@@ -11,5 +11,8 @@
 #ifdef APPLICATION_MODE_LONGLIFE
   #include "application_mode_longlife.h"
 #endif
+#ifdef APPLICATION_MODE_FAST
+  #include "application_mode_fast.h"
+#endif
 
 #endif

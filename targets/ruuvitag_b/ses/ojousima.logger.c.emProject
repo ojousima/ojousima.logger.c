@@ -233,6 +233,14 @@
       filter="*.c;*.h"
       path="../../..//ojousima.ruuvi_endpoints.c"
       recurse="Yes" />
+    <configuration
+      Name="Fast"
+      c_preprocessor_definitions="APPLICATION_MODE_FAST"
+      gcc_debugging_level="None"
+      gcc_optimization_level="Optimize For Size"
+      linker_printf_fmt_level="int"
+      linker_printf_fp_enabled="No"
+      linker_printf_width_precision_supported="No" />
   </project>
   <configuration
     Name="Release"
@@ -243,4 +251,5 @@
     c_preprocessor_definitions="DEBUG; DEBUG_NRF; RUUVI_RUN_TESTS"
     gcc_optimization_level="None" />
   <configuration Name="Longlife" />
+  <configuration Name="Fast" />
 </solution>

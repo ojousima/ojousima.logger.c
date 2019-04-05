@@ -74,7 +74,7 @@ int main(void)
   status |= task_power_dcdc_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
 
-  #if 1
+  #if RUUVI_RUN_TESTS
   // Tests will initialize and uninitialize the sensors, run this before using them in application
   ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Running extended self-tests, this might take a while\r\n");
   test_library_run();

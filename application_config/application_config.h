@@ -169,7 +169,7 @@
 #define APPLICATION_WATCHDOG_ENABLED                1
 #define APPLICATION_WATCHDOG_INTERVAL_MS            120000u
 #define APPLICATION_YIELD_ENABLED                   1
-#define APPLICATION_LOG_ENABLED                     1
+#define APPLICATION_LOG_ENABLED                     0
 // RUUVI_INTERFACE_LOG_ ERROR, WARNING, INFO, DEBUG
 #define APPLICATION_LOG_LEVEL                       RUUVI_INTERFACE_LOG_INFO
 
