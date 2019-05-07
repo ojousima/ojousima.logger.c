@@ -24,6 +24,7 @@ static ruuvi_driver_status_t test_run(ruuvi_driver_sensor_init_fp init, ruuvi_dr
 
     err_code = test_sensor_modes(init, bus, handle);
     RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_ERROR_SELFTEST);
+
   #endif
   return err_code;
 }
