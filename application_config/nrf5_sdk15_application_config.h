@@ -83,4 +83,16 @@
 #define FDS_ENABLED       APPLICATION_FLASH_ENABLED
 #define FDS_VIRTUAL_PAGES APPLICATION_FLASH_DATA_PAGES_NUMBER
 
+// <o> APP_TIMER_CONFIG_RTC_FREQUENCY  - Configure RTC prescaler.
+
+// <0=> 32768 Hz
+// <1=> 16384 Hz
+// <3=> 8192 Hz
+// <7=> 4096 Hz
+// <15=> 2048 Hz
+// <31=> 1024 Hz
+
+#define APP_TIMER_CONFIG_RTC_FREQUENCY 31
+
+
 #endif
