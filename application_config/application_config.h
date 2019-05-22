@@ -10,7 +10,7 @@
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
 /** @brief Version string, displayed in NFC read and GATT data on DIS */
-#define APPLICATION_FW_VERSION "AccelerationBC 1.1.4"
+#define APPLICATION_FW_VERSION "AccelerationST 1.0.0"
 
 /** @brief Bytes of RAM to conserve for printed log messages
  *  Pick a power of 2 for nRF5 backend. at least 128 is recommended.
@@ -97,7 +97,7 @@
   * Valid values are 1, 10, 25, 50, 100, 200 for LIS2DH12
   * @c RUUVI_DRIVER_CFG_MIN, @c RUUVI_DRIVER_CFG_MAX, and @c RUUVI_DRIVER_CFG_DEFAULT, are valid for all sensors.
   */
-  #define APPLICATION_ACCELEROMETER_SAMPLERATE RUUVI_DRIVER_SENSOR_CFG_CUSTOM_1
+  #define APPLICATION_ACCELEROMETER_SAMPLERATE RUUVI_DRIVER_SENSOR_CFG_MAX
 
   /** @brief Resolution of accelerometer, in bits.
   *
@@ -105,7 +105,7 @@
   * Valid values are  8, 10, 12 for LIS2DH12
   * @c RUUVI_DRIVER_SENSOR_CFG_MIN, @c RUUVI_DRIVER_SENSOR_CFG_MAX, and @c RUUVI_DRIVER_SENSOR_CFG_DEFAULT, are valid for all sensors.
   */
-  #define APPLICATION_ACCELEROMETER_RESOLUTION RUUVI_DRIVER_SENSOR_CFG_DEFAULT
+  #define APPLICATION_ACCELEROMETER_RESOLUTION RUUVI_DRIVER_SENSOR_CFG_MIN
 
   /** @brief Scale of accelerometer, in G (9.81 m / s^2).
   *
@@ -143,7 +143,7 @@
   #define APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD 0.100f
 #endif
 
-#define APPLICATION_ACCELEROMETER_DATASETS 25 //!< 25 data sets of 32 samples -> 3 seconds of data at 400 Hz
+#define APPLICATION_ACCELEROMETER_DATASETS 250 //!< 200 data sets of 32 samples -> 3 seconds of data at 5kHz / 2
 #define APPLICATION_MEASUREMENT_INTERVAL   30*60*1000 //<! 30 minutes
 
 /** @brief enable compiling accelerometer interface */

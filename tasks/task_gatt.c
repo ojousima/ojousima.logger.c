@@ -24,9 +24,10 @@
 #include <string.h>
 
 // Buffer for GATT data
-static uint8_t buffer[4096];
+static uint8_t buffer[400];
 static ringbuffer_t tx_buffer;
 static size_t buffer_index = 0;
+static volatile bool connected = false;
 
 static ruuvi_interface_communication_t channel;
 
@@ -147,6 +148,7 @@ ruuvi_driver_status_t task_gatt_on_gatt(ruuvi_interface_communication_evt_t evt,
       msg.data_length = 20;
       buffer_index = 0;
       task_gatt_send(&msg);
+      connected = true;
       break;
 
     // TODO: Handle case where connection was made but NUS was not registered
@@ -155,6 +157,7 @@ ruuvi_driver_status_t task_gatt_on_gatt(ruuvi_interface_communication_evt_t evt,
       // Todo: data advertising
       ruuvi_interface_communication_ble4_gatt_advertise_connectablity(true, "Ruuvi", true,
           true);
+      connected = false;
       break;
 
     case RUUVI_INTERFACE_COMMUNICATION_SENT:
@@ -172,6 +175,16 @@ ruuvi_driver_status_t task_gatt_on_gatt(ruuvi_interface_communication_evt_t evt,
 
     case RUUVI_INTERFACE_COMMUNICATION_RECEIVED:
       // Schedule handling command
+      ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "RX \r\n");
+      char* incoming = (char*) p_data;
+      if(data_len && incoming[0] == 'S')
+      {
+        err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_gatt_scheduler_task);
+      }
+      if(data_len && incoming[0] == 'R')
+      {
+        err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_enter_measuring);
+      }
       break;
 
     default:
@@ -206,4 +219,57 @@ ruuvi_driver_status_t task_gatt_send(ruuvi_interface_communication_message_t* co
   // schedule queue to be transmitted if tx is not already ongoing
   ruuvi_interface_scheduler_event_put(NULL, 0,  task_gatt_queue_process);
   return RUUVI_DRIVER_SUCCESS;
+}
+
+//handler for scheduled gatt action
+void task_gatt_scheduler_task(void* p_event_data, uint16_t event_size)
+{
+  ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
+  static size_t current_index = 0;
+  // Get stored acceleration data. 
+  task_acceleration_data_t* p_data;
+  size_t data_len;
+  task_acceleration_get_samples(&p_data, &data_len);
+
+  // If queue is processed, return
+  if((current_index + 5 >= data_len) || !connected) 
+  { 
+    current_index = 0;
+    return; 
+  } 
+  
+  // queue message
+  while((current_index + 5 < data_len) && RUUVI_DRIVER_SUCCESS == err_code)
+  {
+    ruuvi_interface_communication_message_t msg = {0};
+    
+    msg.data[3] = (current_index >> 8) & 0xFF;
+    msg.data[4] = (current_index >> 0) & 0xFF;
+
+    msg.data[5] = (p_data[current_index + 0]).accx;
+    msg.data[6] = (p_data[current_index + 0]).accy;
+    msg.data[7] = (p_data[current_index + 0]).accz;
+
+    msg.data[8]  = (p_data[current_index + 1]).accx;
+    msg.data[9]  = (p_data[current_index + 1]).accy;
+    msg.data[10] = (p_data[current_index + 1]).accz;
+
+    msg.data[11] = (p_data[current_index + 2]).accx;
+    msg.data[12] = (p_data[current_index + 2]).accy;
+    msg.data[13] = (p_data[current_index + 2]).accz;
+
+    msg.data[14] = (p_data[current_index + 3]).accx;
+    msg.data[15] = (p_data[current_index + 3]).accy;
+    msg.data[16] = (p_data[current_index + 3]).accz;
+
+    msg.data[17] = (p_data[current_index + 4]).accx;
+    msg.data[18] = (p_data[current_index + 4]).accy;
+    msg.data[19] = (p_data[current_index + 4]).accz;
+    msg.data_length = 20;
+    err_code = task_gatt_send(&msg);
+    if(RUUVI_DRIVER_SUCCESS == err_code) { current_index += 5; }
+  }
+  // Queue next tx
+  err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_gatt_scheduler_task);
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Batch prepared\r\n");
 }

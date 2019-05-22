@@ -31,15 +31,16 @@
 static ruuvi_interface_timer_id_t m_measurement_timer;
 static ruuvi_driver_sensor_t acceleration_sensor = {0};
 static uint8_t m_nbr_movements;
-static ruuvi_interface_acceleration_data_t data[APPLICATION_ACCELEROMETER_DATASETS * 32];
+static task_acceleration_data_t bdata[APPLICATION_ACCELEROMETER_DATASETS * 32];
 static size_t series_counter = 0;
 static size_t series_length = 0;
 static float m_p2p[3];
 static float m_rms[3];
 static float m_var[3];
 
-static inline int8_t f2i(float value)
+static int8_t f2i(float value)
 {
+  value *= (126.0/2.0);
   if(value > 125) return 125;
   if(value < -125) return -125;
   return (int8_t) lroundf(value);
@@ -64,7 +65,27 @@ void task_acceleration_enter_measuring(void* p_event_data, uint16_t event_size)
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
   ruuvi_driver_sensor_configuration_t config;
-  config.samplerate    = RUUVI_DRIVER_SENSOR_CFG_CUSTOM_1;
+  config.samplerate    = RUUVI_DRIVER_SENSOR_CFG_MAX;
+  config.resolution    = APPLICATION_ACCELEROMETER_RESOLUTION;
+  config.scale         = APPLICATION_ACCELEROMETER_SCALE;
+  config.dsp_function  = APPLICATION_ACCELEROMETER_DSPFUNC;
+  config.dsp_parameter = APPLICATION_ACCELEROMETER_DSPPARAM;
+  config.mode          = RUUVI_DRIVER_SENSOR_CFG_CONTINUOUS;
+  err_code |= task_acceleration_configure(&config);
+  series_length = 0;
+  float ths = APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD;
+  err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(false, &ths);
+  err_code |= ruuvi_interface_lis2dh12_fifo_use(true);
+  err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(true);
+  task_led_write(RUUVI_BOARD_LED_GREEN, TASK_LED_ON);
+  RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
+}
+
+static void task_acceleration_enter_standby(void* p_event_data, uint16_t event_size)
+{
+  ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
+  ruuvi_driver_sensor_configuration_t config;
+  config.samplerate    = 10; // TODO: Define
   config.resolution    = APPLICATION_ACCELEROMETER_RESOLUTION;
   config.scale         = APPLICATION_ACCELEROMETER_SCALE;
   config.dsp_function  = APPLICATION_ACCELEROMETER_DSPFUNC;
@@ -73,43 +94,37 @@ void task_acceleration_enter_measuring(void* p_event_data, uint16_t event_size)
   err_code |= task_acceleration_configure(&config);
   float ths = APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD;
   err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(false, &ths);
-  err_code |= ruuvi_interface_lis2dh12_fifo_use(true);
-  err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(true);
-  RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
-}
-
-static void task_acceleration_enter_standby(void* p_event_data, uint16_t event_size)
-{
-  ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
-  ruuvi_driver_sensor_configuration_t config;
-  config.samplerate    = APPLICATION_ACCELEROMETER_SAMPLERATE;
-  config.resolution    = APPLICATION_ACCELEROMETER_RESOLUTION;
-  config.scale         = APPLICATION_ACCELEROMETER_SCALE;
-  config.dsp_function  = APPLICATION_ACCELEROMETER_DSPFUNC;
-  config.dsp_parameter = APPLICATION_ACCELEROMETER_DSPPARAM;
-  config.mode          = RUUVI_DRIVER_SENSOR_CFG_SLEEP;
-  err_code |= task_acceleration_configure(&config);
-  float ths = APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD;
-  err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(false, &ths);
   err_code |= ruuvi_interface_lis2dh12_fifo_use(false);
   err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(false);
+  task_led_write(RUUVI_BOARD_LED_GREEN, TASK_LED_OFF);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
 static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_size)
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
-  static ruuvi_interface_acceleration_data_t data[APPLICATION_ACCELEROMETER_DATASETS * 32];
-  size_t data_len = (sizeof(data) / sizeof(ruuvi_interface_acceleration_data_t)) - series_length;
-  err_code |= ruuvi_interface_lis2dh12_fifo_read(&data_len, &(data[series_length]));
+  ruuvi_interface_acceleration_data_t data[32];
+  size_t data_len = (sizeof(data) / sizeof(ruuvi_interface_acceleration_data_t));
+  err_code |= ruuvi_interface_lis2dh12_fifo_read(&data_len, data);
   ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "FIFO\r\n");
   if(!data_len)
   {
     return;
   }
-  series_length += data_len;
-  series_counter++;
 
+  for(size_t ii = 0; ii < data_len; ii++)
+  {
+    // Decimate 1/2 samples
+    if(ii % 2)
+    {
+      bdata[series_length].accx = f2i(data[ii/2].x_g);
+      bdata[series_length].accy = f2i(data[ii/2].y_g);
+      bdata[series_length].accz = f2i(data[ii/2].z_g);
+      series_length ++;
+    }
+  }
+
+  /* Broadcast mode
   if(series_length >= (APPLICATION_ACCELEROMETER_DATASETS-1) * 32)
   {
     float x[APPLICATION_ACCELEROMETER_DATASETS * 32];
@@ -147,6 +162,15 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
     err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_advertisement_scheduler_task);
 
     RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
+  }
+  */
+
+  /* Stream mode */
+  if(series_length >= (APPLICATION_ACCELEROMETER_DATASETS-1) * 32)
+  {
+    // signal that data should be updated. Enter standby
+    err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_enter_standby);
+    err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_gatt_scheduler_task);    
   }
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
@@ -296,4 +320,10 @@ ruuvi_driver_status_t task_acceleration_dev_get(ruuvi_interface_acceleration_dat
   data->y_g = sqrtf(m_var[TASK_ACCELERATION_Y_INDEX]);
   data->z_g = sqrtf(m_var[TASK_ACCELERATION_Z_INDEX]);
   return RUUVI_DRIVER_SUCCESS;
+}
+
+void task_acceleration_get_samples(task_acceleration_data_t** p_event_data, size_t* nsamples)
+{
+  *p_event_data = bdata;
+  *nsamples = series_length;
 }

@@ -43,4 +43,9 @@ ruuvi_driver_status_t task_gatt_on_gatt(ruuvi_interface_communication_evt_t evt,
 ruuvi_driver_status_t task_gatt_send(ruuvi_interface_communication_message_t* const msg);
 
 
+/**
+ *
+ */
+ void task_gatt_scheduler_task(void* p_event_data, uint16_t event_size);
+
 #endif

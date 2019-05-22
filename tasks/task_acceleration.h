@@ -18,6 +18,13 @@
 #define TASK_ACCELERATION_Y_INDEX 1
 #define TASK_ACCELERATION_Z_INDEX 2
 
+typedef struct __PACKED__
+{
+  int8_t accx;
+  int8_t accy;
+  int8_t accz;
+}task_acceleration_data_t;
+
 /**
  * Auto-detects and initializes acceleration sensor in low-power state
  * Reads supported sensors from board.h and tries to initialize them.
@@ -54,4 +61,6 @@ ruuvi_driver_status_t task_acceleration_rms_get(ruuvi_interface_acceleration_dat
 ruuvi_driver_status_t task_acceleration_dev_get(ruuvi_interface_acceleration_data_t* const data);
 
 void task_acceleration_enter_measuring(void* p_event_data, uint16_t event_size);
+
+void task_acceleration_get_samples(task_acceleration_data_t** p_event_data, size_t* nsamples);
 #endif
