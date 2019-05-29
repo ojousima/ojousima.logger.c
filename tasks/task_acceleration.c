@@ -18,7 +18,9 @@
 #include "ruuvi_interface_yield.h"
 
 #include "task_acceleration.h"
+#include "task_adc.h"
 #include "task_advertisement.h"
+#include "task_environmental.h"
 #include "task_gatt.h"
 #include "task_led.h"
 
@@ -37,13 +39,22 @@ static size_t series_length = 0;
 static float m_p2p[3];
 static float m_rms[3];
 static float m_var[3];
+static uint8_t m_scale = APPLICATION_ACCELEROMETER_SCALE; //<! current scale of accelerometer
+static uint8_t m_series_scale = 0;                  //<! scale of last accelerometer run
+static float m_activity_ths = 0.1f; // TODO: define
+static uint64_t m_last_run = 0; 
 
 static int8_t f2i(float value)
 {
-  value *= (126.0/2.0);
+  value *= (126.0/m_scale);
   if(value > 125) return 125;
   if(value < -125) return -125;
   return (int8_t) lroundf(value);
+}
+
+static float i2f(const int8_t value)
+{
+  return value / (126.0/m_scale);
 }
 
 
@@ -57,6 +68,7 @@ ruuvi_driver_status_t task_acceleration_configure(ruuvi_driver_sensor_configurat
   err_code |= acceleration_sensor.configuration_set(&acceleration_sensor, config);
   ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Actual configuration:\r\n");
   ruuvi_interface_log_sensor_configuration(RUUVI_INTERFACE_LOG_INFO, config, "g");
+  m_scale = config->scale;
   RUUVI_DRIVER_ERROR_CHECK(err_code, ~RUUVI_DRIVER_ERROR_FATAL);
   return err_code;
 }
@@ -67,7 +79,7 @@ void task_acceleration_enter_measuring(void* p_event_data, uint16_t event_size)
   ruuvi_driver_sensor_configuration_t config;
   config.samplerate    = RUUVI_DRIVER_SENSOR_CFG_MAX;
   config.resolution    = APPLICATION_ACCELEROMETER_RESOLUTION;
-  config.scale         = APPLICATION_ACCELEROMETER_SCALE;
+  config.scale         = m_scale;
   config.dsp_function  = APPLICATION_ACCELEROMETER_DSPFUNC;
   config.dsp_parameter = APPLICATION_ACCELEROMETER_DSPPARAM;
   config.mode          = RUUVI_DRIVER_SENSOR_CFG_CONTINUOUS;
@@ -87,17 +99,66 @@ static void task_acceleration_enter_standby(void* p_event_data, uint16_t event_s
   ruuvi_driver_sensor_configuration_t config;
   config.samplerate    = 10; // TODO: Define
   config.resolution    = APPLICATION_ACCELEROMETER_RESOLUTION;
-  config.scale         = APPLICATION_ACCELEROMETER_SCALE;
+  config.scale         = m_scale;
   config.dsp_function  = APPLICATION_ACCELEROMETER_DSPFUNC;
   config.dsp_parameter = APPLICATION_ACCELEROMETER_DSPPARAM;
   config.mode          = RUUVI_DRIVER_SENSOR_CFG_CONTINUOUS;
   err_code |= task_acceleration_configure(&config);
-  float ths = APPLICATION_ACCELEROMETER_ACTIVITY_THRESHOLD;
-  err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(false, &ths);
+  if(m_activity_ths > m_scale * 0.5)
+  {
+    m_activity_ths = m_scale * 0.5;
+  }
+  err_code |= ruuvi_interface_lis2dh12_activity_interrupt_use(true, &m_activity_ths);
   err_code |= ruuvi_interface_lis2dh12_fifo_use(false);
   err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(false);
   task_led_write(RUUVI_BOARD_LED_GREEN, TASK_LED_OFF);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
+}
+
+/**
+ *  Calculates the threshold to trigger a new sampling sequence. 
+ *  Scales down accelerometer threshold if needed
+ */
+static void task_acceleration_calculate_activity_threshold()
+{
+  
+  float rms_x_accu = 0;
+  float rms_y_accu = 0;
+  float rms_z_accu = 0;
+  float peak = 0;
+  for(size_t iii = 0; iii < series_length; iii++)
+  {
+    const float x = i2f(bdata[iii].accx);
+    const float y = i2f(bdata[iii].accy);
+    const float z = i2f(bdata[iii].accz);
+    peak = (x > peak) ? x : peak;
+    peak = (y > peak) ? y : peak;
+    peak = (z > peak) ? z : peak;
+    rms_x_accu += x*x;
+    rms_y_accu += y*y;
+    rms_z_accu += z*z;
+  }
+
+  rms_x_accu = sqrtf(rms_x_accu / series_length);
+  rms_y_accu = sqrtf(rms_y_accu / series_length);
+  rms_z_accu = sqrtf(rms_z_accu / series_length);
+  float rms = rms_x_accu > rms_y_accu ? rms_x_accu : rms_y_accu;
+  rms = rms_z_accu > rms_y_accu ? rms_z_accu : rms_y_accu;
+
+  m_activity_ths = 2 * peak + 1 * rms;
+  char message[128] = {0};
+  snprintf(message, sizeof(message), "Setting threshold to: %0.3f g\r\n", m_activity_ths);
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, message);
+
+  // scale down if needed
+  if(peak < m_scale / 4)
+  {
+    if (m_scale > 2)
+    { 
+      ruuvi_interface_log(RUUVI_INTERFACE_LOG_DEBUG, "Scaling down\r\n");
+      m_scale /= 2; 
+    }
+  }
 }
 
 static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_size)
@@ -106,7 +167,8 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
   ruuvi_interface_acceleration_data_t data[32];
   size_t data_len = (sizeof(data) / sizeof(ruuvi_interface_acceleration_data_t));
   err_code |= ruuvi_interface_lis2dh12_fifo_read(&data_len, data);
-  ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "FIFO\r\n");
+  ruuvi_interface_log(RUUVI_INTERFACE_LOG_DEBUG, "FIFO\r\n");
+  bool clipped = false;
   if(!data_len)
   {
     return;
@@ -120,6 +182,15 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
       bdata[series_length].accx = f2i(data[ii/2].x_g);
       bdata[series_length].accy = f2i(data[ii/2].y_g);
       bdata[series_length].accz = f2i(data[ii/2].z_g);
+
+      // Check for clipped values. Sample is considered clipped if the value is over 80 % of maximum value, i.e. over
+      // 100 or under -100.
+      if(bdata[series_length].accx > 100 || bdata[series_length].accx < -100 ||
+         bdata[series_length].accy > 100 || bdata[series_length].accy < -100 ||
+         bdata[series_length].accz > 100 || bdata[series_length].accz < -100)
+         {
+           clipped = true;
+         }
       series_length ++;
     }
   }
@@ -166,20 +237,48 @@ static void task_acceleration_fifo_full_task(void *p_event_data, uint16_t event_
   */
 
   /* Stream mode */
+
+  // If clipped sample was detected, rerun with larger scale
+  if(clipped)
+  {
+    ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, "Clip detected\r\n");
+    if(m_scale < 16)
+    { 
+      m_scale *= 2; 
+      err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_enter_standby);
+      err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_enter_measuring);
+    }
+  }
+
+  /* If Full data is collected */
   if(series_length >= (APPLICATION_ACCELEROMETER_DATASETS-1) * 32)
   {
-    // signal that data should be updated. Enter standby
+    // Signal that data should be updated. Enter standby, sample environmental sensor and ADC.
+    //
     err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_enter_standby);
-    err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_gatt_scheduler_task);    
+    err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_environmental_scheduler_task);
+    err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_adc_scheduler_task);
+    err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_gatt_scheduler_task);
+    series_counter++;
+    m_series_scale = m_scale;
+    m_last_run = ruuvi_interface_rtc_millis();
+    // Calculate threshold for activity trigger as well as downscaling.
+    task_acceleration_calculate_activity_threshold();
   }
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
 static void on_timer(void* p_context)
 {
-  ruuvi_driver_status_t err_code = ruuvi_interface_scheduler_event_put(NULL, 0,
-                                   task_acceleration_enter_measuring);
-  //err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
+  // If last measurement has been over a day ago, rerun
+  ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
+
+  if((ruuvi_interface_rtc_millis() - m_last_run) > 24*60*60*1000)
+  {
+    err_code = ruuvi_interface_scheduler_event_put(NULL, 0,
+                                     task_acceleration_enter_measuring);
+  }
+
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
@@ -187,6 +286,13 @@ static void on_fifo(ruuvi_interface_gpio_evt_t event)
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
   err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_fifo_full_task);
+  RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
+}
+
+static void on_movement(ruuvi_interface_gpio_evt_t event)
+{
+  ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
+  err_code |= ruuvi_interface_scheduler_event_put(NULL, 0, task_acceleration_enter_measuring);
   RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
 }
 
@@ -216,11 +322,11 @@ ruuvi_driver_status_t task_acceleration_init(void)
     err_code |= ruuvi_interface_gpio_interrupt_enable(fifo_pin, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_fifo);
     err_code |= ruuvi_interface_lis2dh12_fifo_use(true);
     err_code |= ruuvi_interface_lis2dh12_fifo_interrupt_use(true);
-    //ruuvi_interface_gpio_id_t act_pin;
-    //act_pin.pin = RUUVI_BOARD_INT_ACC2_PIN;
-    //err_code |= ruuvi_interface_gpio_interrupt_enable(act_pin, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_movement);
+    ruuvi_interface_gpio_id_t act_pin;
+    act_pin.pin = RUUVI_BOARD_INT_ACC2_PIN;
+    err_code |= ruuvi_interface_gpio_interrupt_enable(act_pin, RUUVI_INTERFACE_GPIO_SLOPE_LOTOHI, RUUVI_INTERFACE_GPIO_MODE_INPUT_PULLDOWN, on_movement);
 
-    err_code |= ruuvi_interface_timer_start(m_measurement_timer, APPLICATION_MEASUREMENT_INTERVAL);
+    err_code |= ruuvi_interface_timer_start(m_measurement_timer, APPLICATION_ACCELEROMETER_TIMER_INTERVAL);
 
     return err_code;
   }
@@ -326,4 +432,24 @@ void task_acceleration_get_samples(task_acceleration_data_t** p_event_data, size
 {
   *p_event_data = bdata;
   *nsamples = series_length;
+}
+
+uint64_t task_acceleration_get_data_age(void)
+{
+  return (ruuvi_interface_rtc_millis() - m_last_run) / 1000;
+}
+
+uint16_t task_acceleration_get_series_count(void)
+{
+  return series_counter;
+}
+
+uint8_t task_acceleration_get_scale(void)
+{
+  return m_series_scale;
+}
+
+uint16_t task_acceleration_get_threshold(void)
+{
+  return (uint16_t)m_activity_ths*1000;
 }

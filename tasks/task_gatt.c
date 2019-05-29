@@ -11,12 +11,15 @@
 #include "ruuvi_interface_communication_ble4_gatt.h"
 #include "ruuvi_interface_communication_radio.h"
 #include "ruuvi_interface_communication.h"
+#include "ruuvi_interface_environmental.h"
 #include "ruuvi_interface_log.h"
 #include "ruuvi_interface_rtc.h"
 #include "ruuvi_interface_scheduler.h"
 #include "ruuvi_interface_watchdog.h"
-#include "task_gatt.h"
 #include "task_acceleration.h"
+#include "task_adc.h"
+#include "task_environmental.h"
+#include "task_gatt.h"
 #include "ringbuffer.h"
 
 #include <stdlib.h>
@@ -221,7 +224,7 @@ ruuvi_driver_status_t task_gatt_send(ruuvi_interface_communication_message_t* co
   return RUUVI_DRIVER_SUCCESS;
 }
 
-//handler for scheduled gatt action
+//handler for scheduled gatt action  - TODO: separate data encoding logic
 void task_gatt_scheduler_task(void* p_event_data, uint16_t event_size)
 {
   ruuvi_driver_status_t err_code = RUUVI_DRIVER_SUCCESS;
@@ -238,11 +241,64 @@ void task_gatt_scheduler_task(void* p_event_data, uint16_t event_size)
     return; 
   } 
   
-  // queue message
+  // queue messages
   while((current_index + 5 < data_len) && RUUVI_DRIVER_SUCCESS == err_code)
   {
     ruuvi_interface_communication_message_t msg = {0};
+
+    // Send header data
+    if(current_index == 0)
+    {
+    msg.data[2] = 0xF0;
+    // Send sample index
+    uint16_t sample = task_acceleration_get_series_count();
+    msg.data[3] = sample >> 8 & 0xFF;
+    msg.data[4] = sample >> 0 & 0xFF;
     
+    //Send battery voltage at the time of the sample
+    ruuvi_interface_adc_data_t battery;
+    task_adc_battery_get(&battery);
+    uint16_t voltage = (uint16_t)(battery.adc_v*1000);
+    msg.data[5] = voltage >> 8 & 0xFF;
+    msg.data[6] = voltage >> 0 & 0xFF;
+
+    // Send environmental data at the time of the sample
+    ruuvi_interface_environmental_data_t env;
+    task_environmental_data_get(&env);
+    int16_t temp  = (int16_t)(env.temperature_c*100);
+    uint16_t pres = (uint16_t)(env.pressure_pa/10);
+    uint16_t humi = (uint16_t)(env.humidity_rh*100);
+    msg.data[7] = temp >> 8 & 0xFF;
+    msg.data[8] = temp >> 0 & 0xFF;
+    msg.data[9] = pres >> 8 & 0xFF;
+    msg.data[10] = pres >> 0 & 0xFF;
+    msg.data[11] = humi >> 8 & 0xFF;
+    msg.data[12] = humi >> 0 & 0xFF;
+
+    // Send age of sample in seconds
+    uint32_t age = (uint32_t) task_acceleration_get_data_age();
+    msg.data[13] = age >> 24 & 0xFF;
+    msg.data[14] = age >> 16 & 0xFF;
+    msg.data[15] = age >> 8 & 0xFF;
+    msg.data[16] = age >> 0 & 0xFF;
+
+    // Send scale of samples
+    uint8_t scale = task_acceleration_get_scale();
+    msg.data[17] = scale;
+
+    // Send activity threshold in milli-g
+    uint16_t threshold = task_acceleration_get_threshold();
+    msg.data[18] = threshold >> 8 & 0xFF;
+    msg.data[19] = threshold >> 0 & 0xFF;
+
+    msg.data_length = 20;
+    err_code = task_gatt_send(&msg);
+    memset(&msg, 0, sizeof(msg));
+    
+    }
+
+    // Send acceleration data
+    msg.data[2] = 0xF1;
     msg.data[3] = (current_index >> 8) & 0xFF;
     msg.data[4] = (current_index >> 0) & 0xFF;
 
@@ -266,7 +322,7 @@ void task_gatt_scheduler_task(void* p_event_data, uint16_t event_size)
     msg.data[18] = (p_data[current_index + 4]).accy;
     msg.data[19] = (p_data[current_index + 4]).accz;
     msg.data_length = 20;
-    err_code = task_gatt_send(&msg);
+    err_code |= task_gatt_send(&msg);
     if(RUUVI_DRIVER_SUCCESS == err_code) { current_index += 5; }
   }
   // Queue next tx

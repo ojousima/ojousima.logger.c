@@ -26,7 +26,7 @@ static volatile float after_tx = 0;
  * Remember to start the timer at init
  */
 //handler for scheduled accelerometer event
-static void task_adc_scheduler_task(void* p_event_data, uint16_t event_size)
+void task_adc_scheduler_task(void* p_event_data, uint16_t event_size)
 {
   ruuvi_driver_status_t status = RUUVI_DRIVER_SUCCESS;
   // Take new sample
@@ -144,7 +144,7 @@ ruuvi_driver_status_t task_adc_init(void)
     // Configure the radio callback here to synchronize radio to ADC, unless we're in simple mode
     if(false == APPLICATION_BATTERY_VOLTAGE_SIMPLE)
     {
-      //ruuvi_interface_communication_radio_activity_callback_set(task_adc_trigger_on_radio);
+      ruuvi_interface_communication_radio_activity_callback_set(task_adc_trigger_on_radio);
       // Get first data point
       ruuvi_driver_status_t status = RUUVI_DRIVER_SUCCESS;
       ruuvi_interface_adc_data_t active;

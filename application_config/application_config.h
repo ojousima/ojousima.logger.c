@@ -10,7 +10,7 @@
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
 /** @brief Version string, displayed in NFC read and GATT data on DIS */
-#define APPLICATION_FW_VERSION "AccelerationST 1.0.0"
+#define APPLICATION_FW_VERSION "AccelerationST 1.2.0"
 
 /** @brief Bytes of RAM to conserve for printed log messages
  *  Pick a power of 2 for nRF5 backend. at least 128 is recommended.
@@ -27,8 +27,8 @@
  * @brief Battery voltage measurement mode configuration
  */
 #ifndef APPLICATION_BATTERY_VOLTAGE_MODE
-  #define APPLICATION_BATTERY_VOLTAGE_SIMPLE   0  //<! Simple mode: Not synchronized to anything, sampled at regular interval
-  #define APPLICATION_BATTERY_VOLTAGE_RADIO    1  //<! Radio mode: Voltage is sampled after radio tx, refreshed after interval has passed.
+  #define APPLICATION_BATTERY_VOLTAGE_SIMPLE   1  //<! Simple mode: Not synchronized to anything, sampled at regular interval
+  #define APPLICATION_BATTERY_VOLTAGE_RADIO    0  //<! Radio mode: Voltage is sampled after radio tx, refreshed after interval has passed.
   #define APPLICATION_BATTERY_VOLTAGE_DROOP    0  //<! Droop mode: Battery is read after TX and after a brief recovery period. Droop is reported
 #endif
 #define APPLICATION_BATTERY_DROOP_DELAY_MS   2  //<! Milliseconds between active and recovered tx
@@ -144,7 +144,8 @@
 #endif
 
 #define APPLICATION_ACCELEROMETER_DATASETS 250 //!< 200 data sets of 32 samples -> 3 seconds of data at 5kHz / 2
-#define APPLICATION_MEASUREMENT_INTERVAL   30*60*1000 //<! 30 minutes
+#define APPLICATION_MEASUREMENT_INTERVAL   24*60*60*1000 //<! 24 hours
+#define APPLICATION_ACCELEROMETER_TIMER_INTERVAL 60*60*1000 // avoid timer overflow, 1 hour
 
 /** @brief enable compiling accelerometer interface */
 #define RUUVI_INTERFACE_ACCELERATION_ENABLED 1
@@ -229,7 +230,7 @@
 #define APPLICATION_TIMER_ENABLED                   1
 #define APPLICATION_TIMER_MAX_INSTANCES             10 ///< Timers are allocated statically on RAM
 #define APPLICATION_WATCHDOG_ENABLED                1
-#define APPLICATION_WATCHDOG_INTERVAL_MS            35*60*1000
+#define APPLICATION_WATCHDOG_INTERVAL_MS            25*60*60*1000
 #define APPLICATION_YIELD_ENABLED                   1
 #define APPLICATION_LOG_ENABLED                     1
 // RUUVI_INTERFACE_LOG_ ERROR, WARNING, INFO, DEBUG

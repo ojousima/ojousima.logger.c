@@ -66,6 +66,9 @@ ruuvi_driver_status_t task_adc_on_button(void);
  **/
 ruuvi_driver_status_t task_adc_sample(void);
 
-
+/**
+ * Wrapper to task_adc_sample for scheduler
+ */
+void task_adc_scheduler_task(void* p_event_data, uint16_t event_size);
 
 #endif

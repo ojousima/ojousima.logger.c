@@ -18,9 +18,9 @@ static ruuvi_interface_timer_id_t environmental_timer;
 static ruuvi_driver_sensor_t environmental_sensor = {0};
 
 //handler for scheduled accelerometer event
-static void task_environmental_scheduler_task(void* p_event_data, uint16_t event_size)
+void task_environmental_scheduler_task(void* p_event_data, uint16_t event_size)
 {
-  // No action necessary
+  task_environmental_sample();
 }
 
 // Timer callback, schedule accelerometer event here.
@@ -100,7 +100,9 @@ ruuvi_driver_status_t task_environmental_sample(void)
   if(NULL == environmental_sensor.mode_set) { return RUUVI_DRIVER_ERROR_INVALID_STATE; }
 
   uint8_t mode = RUUVI_DRIVER_SENSOR_CFG_SINGLE;
-  return environmental_sensor.mode_set(&mode);
+  ruuvi_driver_status_t err_code = environmental_sensor.mode_set(&mode);
+  RUUVI_DRIVER_ERROR_CHECK(err_code, RUUVI_DRIVER_SUCCESS);
+  return err_code;
 }
 
 ruuvi_driver_status_t task_environmental_data_log(const ruuvi_interface_log_severity_t

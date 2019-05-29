@@ -63,4 +63,17 @@ ruuvi_driver_status_t task_acceleration_dev_get(ruuvi_interface_acceleration_dat
 void task_acceleration_enter_measuring(void* p_event_data, uint16_t event_size);
 
 void task_acceleration_get_samples(task_acceleration_data_t** p_event_data, size_t* nsamples);
+
+// Return seconds since last data collection
+uint64_t task_acceleration_get_data_age(void);
+
+// Return index of series
+uint16_t task_acceleration_get_series_count(void);
+
+// Return scale of series
+uint8_t task_acceleration_get_scale(void);
+
+// Return current threshold of activity interrupt
+uint16_t task_acceleration_get_threshold(void);
+
 #endif

@@ -45,5 +45,10 @@ ruuvi_driver_status_t task_environmental_on_button(void);
  **/
 ruuvi_driver_status_t task_environmental_sample(void);
 
+/**
+ * Wrapper to task_environmental_sample for scheduler
+ */
+void task_environmental_scheduler_task(void* p_event_data, uint16_t event_size);
+
 
 #endif

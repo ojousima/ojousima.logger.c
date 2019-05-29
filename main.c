@@ -59,7 +59,7 @@ int main(void)
   ruuvi_interface_log(RUUVI_INTERFACE_LOG_INFO, message);
   #endif
   // Init watchdog after tests.
-  // ruuvi_interface_watchdog_init(APPLICATION_WATCHDOG_INTERVAL_MS);
+  ruuvi_interface_watchdog_init(APPLICATION_WATCHDOG_INTERVAL_MS);
   // Init yield
   status |= ruuvi_interface_yield_init();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
@@ -103,11 +103,13 @@ int main(void)
   // Initialize BLE - does not start advertising
   // status |= task_advertisement_init();
   // status |= task_advertisement_start();
-  status |= task_gatt_init();
-  RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
-  //status |= task_flash_init();
+  status |= task_flash_init();
   //status |= task_flash_demo();
   RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
+    
+  status |= task_gatt_init();
+  RUUVI_DRIVER_ERROR_CHECK(status, RUUVI_DRIVER_SUCCESS);
+
   // Turn RED led off. Turn GREEN LED on if no errors occured
   status |= task_led_write(RUUVI_BOARD_LED_RED, TASK_LED_OFF);
 
