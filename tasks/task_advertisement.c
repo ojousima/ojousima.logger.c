@@ -158,12 +158,14 @@ ruuvi_driver_status_t task_advertisement_send_ac(void)
   ruuvi_interface_acceleration_data_t rms;
   ruuvi_interface_acceleration_data_t dev;
   ruuvi_interface_adc_data_t battery;
+  ruuvi_interface_environmental_data_t environmental;
 
   // Get data from sensors
   err_code |= task_acceleration_p2p_get(&p2p);
   err_code |= task_acceleration_rms_get(&rms);
   err_code |= task_acceleration_dev_get(&dev);
   err_code |= task_adc_battery_get(&battery);
+  err_code |= task_environmental_data_get(&environmental);
 
   app_endpoint_ac_data_t data;
   data.p2p[APP_ENDPOINT_AC_X_INDEX] = p2p.x_g;
@@ -177,11 +179,18 @@ ruuvi_driver_status_t task_advertisement_send_ac(void)
   data.dev[APP_ENDPOINT_AC_Z_INDEX] = dev.z_g;
   data.sequence = sequence;
   data.voltage = battery.adc_v;
+  data.temperature = environmental.temperature_c;
 
 
   ruuvi_interface_communication_message_t message;
   message.data_length = APP_ENDPOINT_AC_DATA_LENGTH;
-  app_endpoint_ac_encode(message.data, &data, RUUVI_DRIVER_FLOAT_INVALID);
+  #if APPLICATION_AC_V0_ENABLED
+  app_endpoint_ac_encode_v0(message.data, &data, RUUVI_DRIVER_FLOAT_INVALID);
+  #elif APPLICATION_AC_V1_ENABLED
+  app_endpoint_ac_encode_v1(message.data, &data, RUUVI_DRIVER_FLOAT_INVALID);
+  #else
+  RUUVI_DRIVER_ERROR_CHECK(RUUVI_DRIVER_ERROR_NOT_IMPLEMENTED, RUUVI_DRIVER_SUCCESS);
+  #endif
   ruuvi_interface_communication_ble4_advertising_tx_interval_set(APPLICATION_ADVERTISING_INTERVAL);
   err_code |= channel.send(&message);
 
