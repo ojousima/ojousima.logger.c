@@ -10,7 +10,7 @@
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
 /** @brief Version string, displayed in NFC read and GATT data on DIS */
-#define APPLICATION_FW_VERSION "AccelerationBC 1.1.4"
+#define APPLICATION_FW_VERSION "AccelerationBC 1.2.1"
 
 /** @brief Bytes of RAM to conserve for printed log messages
  *  Pick a power of 2 for nRF5 backend. at least 128 is recommended.
@@ -74,7 +74,7 @@
   * Continuous keeps the sensor running on the background regardless of how often data is read.
   * Continuous is recommended mode for most applications.
   */
-  #define APPLICATION_ENVIRONMENTAL_MODE       RUUVI_DRIVER_SENSOR_CFG_SLEEP
+  #define APPLICATION_ENVIRONMENTAL_MODE       RUUVI_DRIVER_SENSOR_CFG_SINGLE
 #endif
 
 
@@ -172,6 +172,7 @@
   #define APPLICATION_CONNECTION_ADVERTISEMENT_INTERVAL 100
   #define APPLICATION_ADVERTISING_POWER                 RUUVI_BOARD_TX_POWER_MAX
   #define APPLICATION_DATA_FORMAT                       0xAC
+  #define APPLICATION_AC_V1_ENABLED                     1
   #define APPLICATION_STANDBY_INTERVAL                  9900
 #endif
 
