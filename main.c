@@ -130,7 +130,7 @@ int main(void)
     // Sleep
     status |= ruuvi_interface_yield();
     // Turn on activity led
-    status |= task_led_write(RUUVI_BOARD_LED_RED, RUUVI_BOARD_LEDS_ACTIVE_STATE);
+    // status |= task_led_write(RUUVI_BOARD_LED_RED, RUUVI_BOARD_LEDS_ACTIVE_STATE);
     // Reset only on fatal error
     RUUVI_DRIVER_ERROR_CHECK(status, ~RUUVI_DRIVER_ERROR_FATAL);
   }
