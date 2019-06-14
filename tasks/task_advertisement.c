@@ -165,6 +165,7 @@ ruuvi_driver_status_t task_advertisement_send_ac(void)
   err_code |= task_acceleration_rms_get(&rms);
   err_code |= task_acceleration_dev_get(&dev);
   err_code |= task_adc_battery_get(&battery);
+  err_code |= task_environmental_sample();
   err_code |= task_environmental_data_get(&environmental);
 
   app_endpoint_ac_data_t data;

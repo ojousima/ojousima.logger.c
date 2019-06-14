@@ -10,7 +10,7 @@
 #include "application_modes.h" // Includes different modes, such as long-life with low sampling rate and tx rate.
 
 /** @brief Version string, displayed in NFC read and GATT data on DIS */
-#define APPLICATION_FW_VERSION "AccelerationBC 1.2.1"
+#define APPLICATION_FW_VERSION "AccelerationBC 1.2.4"
 
 /** @brief Bytes of RAM to conserve for printed log messages
  *  Pick a power of 2 for nRF5 backend. at least 128 is recommended.
@@ -55,7 +55,7 @@
   * Ooversampling (OS) increases power consumption but lowers noise.
   * @see https://blog.ruuvi.com/humidity-sensor-673c5b7636fc and https://blog.ruuvi.com/dsp-compromises-3f264a6b6344
   */
-  #define APPLICATION_ENVIRONMENTAL_DSPFUNC    RUUVI_DRIVER_SENSOR_DSP_LOW_PASS
+  #define APPLICATION_ENVIRONMENTAL_DSPFUNC    RUUVI_DRIVER_SENSOR_DSP_OS
 
   /** @brief Parameter to DSP function.
   * The parameter affects how agressively the DSP is applied, higher means
